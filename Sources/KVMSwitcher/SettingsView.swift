@@ -16,6 +16,7 @@ struct SettingsView: View {
         AppSettings.localName(forPortIndex: $0)
     }
     @State private var globalHotKeysEnabled = AppSettings.globalHotKeysEnabled
+    @State private var menuBarLabelStyle = AppSettings.menuBarLabelStyle
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var statusMessage = ""
     @State private var isTesting = false
@@ -46,6 +47,11 @@ struct SettingsView: View {
             }
 
             Section("General") {
+                Picker("Menu bar shows", selection: $menuBarLabelStyle) {
+                    ForEach(MenuBarLabelStyle.allCases) { labelStyle in
+                        Text(labelStyle.settingsTitle).tag(labelStyle)
+                    }
+                }
                 Toggle("Global hotkeys (\(GlobalHotKeys.modifierDescription)1 – 4)", isOn: $globalHotKeysEnabled)
                 Toggle("Launch at login", isOn: $launchAtLogin)
             }
@@ -66,6 +72,7 @@ struct SettingsView: View {
         KeychainStore.password = passwordText
         AppSettings.localPortNames = portNameTexts
         AppSettings.globalHotKeysEnabled = globalHotKeysEnabled
+        AppSettings.menuBarLabelStyle = menuBarLabelStyle
     }
 
     private func save() {

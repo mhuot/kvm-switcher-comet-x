@@ -1,5 +1,22 @@
 import Foundation
 
+/// What the menu bar shows next to the icon for the active port.
+enum MenuBarLabelStyle: String, CaseIterable, Identifiable {
+    case portName
+    case portNumber
+    case iconOnly
+
+    var id: String { rawValue }
+
+    var settingsTitle: String {
+        switch self {
+        case .portName: return "Port name"
+        case .portNumber: return "Port number"
+        case .iconOnly: return "Icon only"
+        }
+    }
+}
+
 /// Persisted, non-secret preferences. The password lives in the Keychain (see `KeychainStore`).
 enum AppSettings {
     private static let defaults = UserDefaults.standard
@@ -8,6 +25,7 @@ enum AppSettings {
         static let host = "kvmHost"
         static let portNames = "localPortNames"
         static let globalHotKeysEnabled = "globalHotKeysEnabled"
+        static let menuBarLabelStyle = "menuBarLabelStyle"
         static let pinnedCertificateFingerprint = "pinnedCertificateFingerprint"
     }
 
@@ -26,6 +44,11 @@ enum AppSettings {
     static var globalHotKeysEnabled: Bool {
         get { defaults.object(forKey: Key.globalHotKeysEnabled) as? Bool ?? true }
         set { defaults.set(newValue, forKey: Key.globalHotKeysEnabled) }
+    }
+
+    static var menuBarLabelStyle: MenuBarLabelStyle {
+        get { defaults.string(forKey: Key.menuBarLabelStyle).flatMap(MenuBarLabelStyle.init) ?? .portName }
+        set { defaults.set(newValue.rawValue, forKey: Key.menuBarLabelStyle) }
     }
 
     /// SHA-256 of the KVM's self-signed leaf certificate, pinned on first connection.

@@ -6,6 +6,7 @@ import SwiftUI
 final class StatusMenuController: NSObject, NSMenuDelegate {
     private static let backgroundRefreshInterval: TimeInterval = 30
     private static let defaultPortCount = 4
+    private static let maximumMenuBarNameLength = 24
 
     private let kvmClient = KVMClient()
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -80,11 +81,25 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         if switchInProgress {
             button.title = " …"
         } else if let switchState, lastErrorMessage == nil {
-            button.title = " \(switchState.activePortIndex + 1)"
+            button.title = menuBarLabel(for: switchState)
         } else {
             button.title = ""
         }
         button.toolTip = lastErrorMessage ?? activePortName().map { "KVM: \($0)" }
+    }
+
+    private func menuBarLabel(for switchState: KVMSwitchState) -> String {
+        switch AppSettings.menuBarLabelStyle {
+        case .iconOnly:
+            return ""
+        case .portNumber:
+            return " \(switchState.activePortIndex + 1)"
+        case .portName:
+            guard let portName = activePortName() else { return " \(switchState.activePortIndex + 1)" }
+            // Keep long names from crowding out other menu bar items.
+            guard portName.count > Self.maximumMenuBarNameLength else { return " \(portName)" }
+            return " \(portName.prefix(Self.maximumMenuBarNameLength - 1))…"
+        }
     }
 
     private func activePortName() -> String? {
