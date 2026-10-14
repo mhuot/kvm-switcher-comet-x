@@ -209,6 +209,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             window.title = "KVM Switcher Settings"
             window.styleMask = [.titled, .closable]
             window.isReleasedWhenClosed = false
+            window.setContentSize(SettingsView.windowSize)
             window.center()
             settingsWindow = window
         }

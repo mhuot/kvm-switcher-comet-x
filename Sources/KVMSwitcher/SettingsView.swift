@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     static let editablePortCount = 4
+    static let windowSize = NSSize(width: 440, height: 580)
 
     /// Called after Save with the new values already persisted.
     let onSave: () -> Void
@@ -56,7 +57,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 420)
+        // A grouped Form scrolls, so it has no intrinsic height; size it explicitly.
+        .frame(width: SettingsView.windowSize.width, height: SettingsView.windowSize.height)
     }
 
     private func persist() {
