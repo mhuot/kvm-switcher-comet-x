@@ -1,0 +1,54 @@
+import Foundation
+
+/// Persisted, non-secret preferences. The password lives in the Keychain (see `KeychainStore`).
+enum AppSettings {
+    private static let defaults = UserDefaults.standard
+
+    private enum Key {
+        static let host = "kvmHost"
+        static let portNames = "localPortNames"
+        static let globalHotKeysEnabled = "globalHotKeysEnabled"
+        static let pinnedCertificateFingerprint = "pinnedCertificateFingerprint"
+    }
+
+    /// Bare host name or IP of the KVM, e.g. "glkvm.local".
+    static var host: String {
+        get { defaults.string(forKey: Key.host) ?? "" }
+        set { defaults.set(normalizedHost(newValue), forKey: Key.host) }
+    }
+
+    /// Local fallback names for ports, used when the device reports an empty name.
+    static var localPortNames: [String] {
+        get { defaults.stringArray(forKey: Key.portNames) ?? [] }
+        set { defaults.set(newValue, forKey: Key.portNames) }
+    }
+
+    static var globalHotKeysEnabled: Bool {
+        get { defaults.object(forKey: Key.globalHotKeysEnabled) as? Bool ?? true }
+        set { defaults.set(newValue, forKey: Key.globalHotKeysEnabled) }
+    }
+
+    /// SHA-256 of the KVM's self-signed leaf certificate, pinned on first connection.
+    static var pinnedCertificateFingerprint: String? {
+        get { defaults.string(forKey: Key.pinnedCertificateFingerprint) }
+        set { defaults.set(newValue, forKey: Key.pinnedCertificateFingerprint) }
+    }
+
+    static func localName(forPortIndex portIndex: Int) -> String {
+        let names = localPortNames
+        guard portIndex < names.count else { return "" }
+        return names[portIndex].trimmingCharacters(in: .whitespaces)
+    }
+
+    /// Accepts "https://1.2.3.4/", "1.2.3.4" etc. and returns just the host part.
+    static func normalizedHost(_ rawHost: String) -> String {
+        var trimmedHost = rawHost.trimmingCharacters(in: .whitespacesAndNewlines)
+        for scheme in ["https://", "http://"] where trimmedHost.lowercased().hasPrefix(scheme) {
+            trimmedHost = String(trimmedHost.dropFirst(scheme.count))
+        }
+        while trimmedHost.hasSuffix("/") {
+            trimmedHost = String(trimmedHost.dropLast())
+        }
+        return trimmedHost
+    }
+}
