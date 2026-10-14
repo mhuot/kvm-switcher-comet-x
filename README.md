@@ -5,12 +5,15 @@ units with the built-in 4-port switch).
 
 ## Features
 
-- Menu bar icon showing the active port number; the menu lists ports with a checkmark on the active one
+- Menu bar shows the active port's name (or number, or just the icon); the menu lists ports with a checkmark on the active one
 - Press 1–4 while the menu is open, or use the global hotkeys ⌃⌥⌘1 – ⌃⌥⌘4 from anywhere
 - Port names come from the KVM, or from local names you set in Settings
 - Admin password stored in the macOS Keychain
 - Pins the KVM's self-signed TLS certificate on first connect (trust on first use)
 - Optional launch at login
+
+See the [User Guide](docs/USER_GUIDE.md) for setup, everyday use, troubleshooting and the
+macOS Keychain prompt.
 
 ## Build & install
 
