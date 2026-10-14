@@ -31,8 +31,10 @@ The GLKVM firmware is derived from PiKVM's kvmd. All replies are `{"ok": bool, "
 | Log in       | `POST /api/auth/login`, form body `user=admin&passwd=…` → `{token}` |
 | Switch state | `GET /api/switch`, header `token: …`                               |
 | Change port  | `POST /api/switch/set_active?port=N` (N is zero-based)             |
+| Port names   | `GET /api/system/get_config` → `result.config.port_names[]`        |
 
 `result.summary.active_port` is the active zero-based port, and `result.model.ports[]` lists the ports.
+The port names you set in the web UI live in the UI's config (`port_names`), not in `model.ports[].name`.
 Accounts with 2FA enabled are not supported.
 
 Do not commit `.har` captures: they contain live session tokens (they are gitignored).

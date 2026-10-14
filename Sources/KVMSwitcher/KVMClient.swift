@@ -66,7 +66,17 @@ final class KVMClient: NSObject, URLSessionDelegate {
 
     func fetchSwitchState() async throws -> KVMSwitchState {
         let responseData = try await authorizedRequest(method: "GET", path: "/api/switch")
-        return try Self.parseSwitchState(responseData)
+        // Names are cosmetic, so a failed config read should not block switching.
+        let webUIPortNames = (try? await fetchWebUIPortNames()) ?? []
+        return try Self.parseSwitchState(responseData, webUIPortNames: webUIPortNames)
+    }
+
+    /// The GL.iNet web UI saves port names in its own config, not on the kvmd switch ports.
+    private func fetchWebUIPortNames() async throws -> [String] {
+        let responseData = try await authorizedRequest(method: "GET", path: "/api/system/get_config")
+        let configResult = try JSONSerialization.jsonObject(with: responseData) as? [String: Any]
+        let webUIConfig = configResult?["config"] as? [String: Any]
+        return webUIConfig?["port_names"] as? [String] ?? []
     }
 
     func setActivePort(_ portIndex: Int) async throws {
@@ -165,7 +175,7 @@ final class KVMClient: NSObject, URLSessionDelegate {
         return try JSONSerialization.data(withJSONObject: resultValue)
     }
 
-    private static func parseSwitchState(_ resultData: Data) throws -> KVMSwitchState {
+    private static func parseSwitchState(_ resultData: Data, webUIPortNames: [String]) throws -> KVMSwitchState {
         guard
             let switchResult = try JSONSerialization.jsonObject(with: resultData) as? [String: Any],
             let summary = switchResult["summary"] as? [String: Any],
@@ -176,10 +186,13 @@ final class KVMClient: NSObject, URLSessionDelegate {
 
         let videoLinks = (switchResult["video"] as? [String: Any])?["links"] as? [Bool] ?? []
         let ports = rawPorts.enumerated().map { portIndex, rawPort in
-            KVMPort(
+            let switchPortName = (rawPort["name"] as? String ?? "").trimmingCharacters(in: .whitespaces)
+            let webUIPortName = portIndex < webUIPortNames.count
+                ? webUIPortNames[portIndex].trimmingCharacters(in: .whitespaces) : ""
+            return KVMPort(
                 portIndex: portIndex,
                 portId: rawPort["id"] as? String ?? "\(portIndex + 1)",
-                deviceName: (rawPort["name"] as? String ?? "").trimmingCharacters(in: .whitespaces),
+                deviceName: switchPortName.isEmpty ? webUIPortName : switchPortName,
                 hasVideoLink: portIndex < videoLinks.count ? videoLinks[portIndex] : true
             )
         }
