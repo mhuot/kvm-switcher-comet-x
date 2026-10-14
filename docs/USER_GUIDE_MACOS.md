@@ -1,7 +1,10 @@
 # KVM Switcher for macOS: User Guide
 
-KVM Switcher puts your GL.iNet KVM's port switch in the Mac menu bar. One click (or one
+KVM Switcher puts your GL.iNet Comet X's port switch in the Mac menu bar. One click (or one
 keystroke) moves the KVM to another computer, without opening the KVM's web page.
+
+It's built for the **GL.iNet Comet X (GL-RM4PE)**, GL.iNet's 4-port remote KVM. KVM Switcher
+is an independent project, not affiliated with GL.iNet.
 
 Using Windows or Linux? See the [Windows guide](USER_GUIDE_WINDOWS.md) or the
 [Linux guide](USER_GUIDE_LINUX.md).

@@ -1,8 +1,11 @@
 # KVM Switcher for Linux: User Guide
 
-KVM Switcher puts your GL.iNet KVM's port switch in your desktop's panel (the top or bottom
+KVM Switcher puts your GL.iNet Comet X's port switch in your desktop's panel (the top or bottom
 bar). One click, or one keyboard shortcut, moves the KVM to another computer without opening
 the KVM's web page.
+
+It's built for the **GL.iNet Comet X (GL-RM4PE)**, GL.iNet's 4-port remote KVM. KVM Switcher
+is an independent project, not affiliated with GL.iNet.
 
 Using a Mac or Windows PC? See the [macOS guide](USER_GUIDE_MACOS.md) or the
 [Windows guide](USER_GUIDE_WINDOWS.md).

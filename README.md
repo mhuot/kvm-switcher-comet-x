@@ -1,7 +1,9 @@
 # KVM Switcher
 
-Switch the active port on a GL.iNet KVM (GLKVM / RM-series units with the built-in 4-port
-switch) from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
+Switch the active port on a [GL.iNet Comet X (GL-RM4PE)](https://www.gl-inet.com/blogs/blog/gl-inet-launches-comet-x-gl-rm4pe-a-quad-port-remote-kvm-with-poe-for-simplified-server-management), the 4-port remote KVM,
+from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
+
+KVM Switcher is an independent project and is not affiliated with GL.iNet.
 
 Each platform is a separate native app with no shared code. They all implement the same
 [API contract](docs/API.md) and are tested against the same [fixtures](fixtures/).

@@ -1,7 +1,10 @@
 # KVM Switcher for Windows 11: User Guide
 
-KVM Switcher puts your GL.iNet KVM's port switch in the Windows system tray. One click (or
+KVM Switcher puts your GL.iNet Comet X's port switch in the Windows system tray. One click (or
 one keystroke) moves the KVM to another computer, without opening the KVM's web page.
+
+It's built for the **GL.iNet Comet X (GL-RM4PE)**, GL.iNet's 4-port remote KVM. KVM Switcher
+is an independent project, not affiliated with GL.iNet.
 
 Using a Mac or Linux? See the [macOS guide](USER_GUIDE_MACOS.md) or the
 [Linux guide](USER_GUIDE_LINUX.md).

@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "kvm-switcher"
 version = "1.0.0"
-description = "Tray app and CLI for switching ports on a GL.iNet KVM"
+description = "Tray app and CLI for switching ports on a GL.iNet Comet X (GL-RM4PE) KVM"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }

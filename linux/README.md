@@ -1,6 +1,6 @@
 # KVM Switcher for Linux
 
-Panel (tray) app and command line tool for switching ports on a GL.iNet KVM. Python + GTK 3 +
+Panel (tray) app and command line tool for switching ports on a GL.iNet Comet X (GL-RM4PE) KVM. Python + GTK 3 +
 AppIndicator, with the password stored in the desktop keyring through libsecret.
 
 - Install: `./install.sh` (see the [Linux user guide](../docs/USER_GUIDE_LINUX.md))

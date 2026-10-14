@@ -4,8 +4,8 @@ The three KVM Switcher apps (macOS, Windows, Linux) share no code. This document
 [`fixtures/`](../fixtures) folder are the contract they all implement and test against.
 
 The GL.iNet KVM firmware ("GLKVM") is derived from PiKVM's kvmd. These endpoints were found
-in the KVM's web UI JavaScript bundle and a browser HAR capture, and checked against an
-RM-series KVM with the built-in 4-port switch.
+in the KVM's web UI JavaScript bundle and a browser HAR capture, and checked against a
+GL.iNet Comet X (GL-RM4PE), the 4-port remote KVM with a built-in switch.
 
 ## Transport
 
