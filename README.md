@@ -20,7 +20,7 @@ units with the built-in 4-port switch).
 ```
 
 Requires Xcode / Swift 5.10+ and macOS 13+. On first launch, enter the KVM address (e.g.
-`glkvm.local`) and the admin password in Settings, then click **Test Connection**.
+`glkvm.local` or its IP address) and the admin password in Settings, then click **Test Connection**.
 
 ## KVM API used
 

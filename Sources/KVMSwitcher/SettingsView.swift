@@ -23,7 +23,7 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("GL.iNet KVM") {
-                TextField("Address", text: $hostText, prompt: Text("glkvm.local"))
+                TextField("Address", text: $hostText, prompt: Text("glkvm.local or IP address"))
                 SecureField("Admin password", text: $passwordText)
                 HStack {
                     Button("Test Connection") { testConnection() }
