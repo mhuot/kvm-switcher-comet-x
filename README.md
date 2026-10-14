@@ -5,7 +5,7 @@ switch) from the macOS menu bar or the Windows 11 system tray.
 
 | Platform | Source | User guide |
 |---|---|---|
-| macOS 13+ | `Sources/KVMSwitcher` (Swift, AppKit + SwiftUI) | [docs/USER_GUIDE.md](docs/USER_GUIDE.md) |
+| macOS 13+ | `macos/` (Swift, AppKit + SwiftUI) | [docs/USER_GUIDE_MACOS.md](docs/USER_GUIDE_MACOS.md) |
 | Windows 11 | `windows/KvmSwitcher` (C#, .NET 10 WinForms) | [docs/USER_GUIDE_WINDOWS.md](docs/USER_GUIDE_WINDOWS.md) |
 
 ## Features (macOS)
@@ -17,7 +17,7 @@ switch) from the macOS menu bar or the Windows 11 system tray.
 - Pins the KVM's self-signed TLS certificate on first connect (trust on first use)
 - Optional launch at login
 
-See the [User Guide](docs/USER_GUIDE.md) for setup, everyday use, troubleshooting and the
+See the [User Guide](docs/USER_GUIDE_MACOS.md) for setup, everyday use, troubleshooting and the
 macOS Keychain prompt.
 
 ## Features (Windows 11)
@@ -31,9 +31,9 @@ macOS Keychain prompt.
 ## Build & install (macOS)
 
 ```sh
-./build-app.sh            # builds build/KVM Switcher.app (universal; signed with your
+./macos/build-app.sh            # builds build/KVM Switcher.app (universal; signed with your
                           # Apple Development/Developer ID identity if present, else ad-hoc)
-./build-app.sh --install  # also copies it to /Applications and launches it
+./macos/build-app.sh --install  # also copies it to /Applications and launches it
 ```
 
 Requires Xcode / Swift 5.10+ and macOS 13+. On first launch, enter the KVM address (e.g.

@@ -19,7 +19,7 @@ keystroke) moves the KVM to another computer, without opening the KVM's web page
 1. Open Terminal in the project folder and run:
 
    ```sh
-   ./build-app.sh --install
+   ./macos/build-app.sh --install
    ```
 
    This builds the app, copies **KVM Switcher** into your Applications folder and opens it.
@@ -127,7 +127,7 @@ back, and you can choose **Always Allow**.
 You should normally only see it once. It can come back when:
 
 - **The app was rebuilt or updated.** macOS ties "Always Allow" to the app's code
-  signature. `build-app.sh` signs with your Apple Development certificate when one is
+  signature. `macos/build-app.sh` signs with your Apple Development certificate when one is
   available, so the approval survives rebuilds. Without a certificate, the app gets a new
   temporary signature on every build, and macOS treats each build as a different app.
   Approve it once more after each such build.
