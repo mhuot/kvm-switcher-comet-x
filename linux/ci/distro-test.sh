@@ -6,6 +6,7 @@
 set -eu
 
 repo_path="${1:?usage: distro-test.sh <path-to-repo>}"
+# shellcheck source=/dev/null
 . /etc/os-release
 echo "=== ${PRETTY_NAME}"
 

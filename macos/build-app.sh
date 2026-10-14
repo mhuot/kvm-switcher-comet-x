@@ -1,7 +1,7 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 # Builds "KVM Switcher.app" into ./build. Pass --install to copy it to /Applications.
 set -euo pipefail
-cd "${0:A:h}"
+cd "$(dirname "$0")"
 
 app_bundle="build/KVM Switcher.app"
 swift build -c release --arch arm64 --arch x86_64

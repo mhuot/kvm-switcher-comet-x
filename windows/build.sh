@@ -1,9 +1,9 @@
-#!/bin/zsh
+#!/usr/bin/env bash
 # Builds self-contained single-file KVMSwitcher.exe for Windows (x64 and Arm64)
 # using the .NET SDK container, so no .NET install is needed on the build machine.
 # Output: windows/publish/<runtime>/KVMSwitcher.exe
 set -euo pipefail
-cd "${0:A:h}"
+cd "$(dirname "$0")"
 
 dotnet_sdk_image="mcr.microsoft.com/dotnet/sdk:10.0"
 for runtime_identifier in win-x64 win-arm64; do
