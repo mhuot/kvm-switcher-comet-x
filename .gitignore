@@ -1,0 +1,7 @@
+# Captured browser traffic contains live session tokens
+*.har
+.build/
+build/
+*.app
+.DS_Store
+.swiftpm/
