@@ -5,3 +5,7 @@ build/
 *.app
 .DS_Store
 .swiftpm/
+# .NET (Windows app)
+windows/**/bin/
+windows/**/obj/
+windows/publish/
