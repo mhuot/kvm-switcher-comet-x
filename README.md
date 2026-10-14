@@ -1,71 +1,71 @@
 # KVM Switcher
 
-Switch the active port on a GL.iNet KVM (GLKVM / RM4PE-style units with the built-in 4-port
-switch) from the macOS menu bar or the Windows 11 system tray.
+Switch the active port on a GL.iNet KVM (GLKVM / RM-series units with the built-in 4-port
+switch) from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
 
-| Platform | Source | User guide |
+Each platform is a separate native app with no shared code. They all implement the same
+[API contract](docs/API.md) and are tested against the same [fixtures](fixtures/).
+
+| Platform | Folder | Built with | User guide |
+|---|---|---|---|
+| macOS 13+ | [`macos/`](macos) | Swift, AppKit + SwiftUI | [USER_GUIDE_MACOS.md](docs/USER_GUIDE_MACOS.md) |
+| Windows 11 (x64, Arm64) | [`windows/`](windows) | C#, .NET 10 WinForms | [USER_GUIDE_WINDOWS.md](docs/USER_GUIDE_WINDOWS.md) |
+| Linux | [`linux/`](linux) | Python, GTK 3 + AppIndicator | [USER_GUIDE_LINUX.md](docs/USER_GUIDE_LINUX.md) |
+
+## Features
+
+| | macOS | Windows 11 | Linux |
+|---|---|---|---|
+| Where it lives | Menu bar, active port name beside the icon | Tray, port number drawn on the icon, name on hover | Panel, active port name beside the icon |
+| Switch from the menu | Click, or press 1–4 | Click, or press 1–4 | Click, or press 1–4 |
+| Global shortcut | ⌃⌥⌘1–4 | Ctrl+Alt+Win+1–4 | Desktop shortcut running `kvm-switcher switch N` |
+| Password storage | Keychain | Credential Manager | Desktop keyring (libsecret) |
+| Start at login | Yes | Yes | Yes (XDG autostart) |
+| Command line | | | `kvm-switcher switch/status/list` |
+
+All three read port names from the KVM's web UI and pin the KVM's self-signed certificate on
+first use. None of them support KVMs with 2FA turned on.
+
+## Repository layout
+
+```
+macos/      Swift package: app, tests, build-app.sh
+windows/    KvmSwitcher (app), KvmSwitcher.Tests (portable tests), build.sh
+linux/      Python package, tests, install.sh, ci/ (distro test scripts)
+fixtures/   Anonymized KVM responses + cases.json: the expected results every test suite checks
+docs/       API contract and the three user guides
+.github/    CI workflow and Dependabot
+```
+
+## Build and test
+
+| Platform | Build | Test |
 |---|---|---|
-| macOS 13+ | `macos/` (Swift, AppKit + SwiftUI) | [docs/USER_GUIDE_MACOS.md](docs/USER_GUIDE_MACOS.md) |
-| Windows 11 | `windows/KvmSwitcher` (C#, .NET 10 WinForms) | [docs/USER_GUIDE_WINDOWS.md](docs/USER_GUIDE_WINDOWS.md) |
+| macOS | `./macos/build-app.sh` (`--install` copies it to /Applications) | `cd macos && swift test` |
+| Windows | `./windows/build.sh` (Docker, from macOS/Linux) | `dotnet test windows/KvmSwitcher.Tests` (any OS) |
+| Linux | `./linux/install.sh` | see [linux/README.md](linux/README.md); all distros: `./linux/ci/run-local.sh` |
 
-## Features (macOS)
+`macos/build-app.sh` signs with your Apple Development or Developer ID identity when one is
+installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc.
+`windows/build.sh` writes self-contained single-file builds to
+`windows/publish/win-x64/KVMSwitcher.exe` and `windows/publish/win-arm64/KVMSwitcher.exe`.
+`KVMSwitcher.exe --self-test` checks the Windows-only parts without a KVM.
 
-- Menu bar shows the active port's name (or number, or just the icon); the menu lists ports with a checkmark on the active one
-- Press 1–4 while the menu is open, or use the global hotkeys ⌃⌥⌘1 – ⌃⌥⌘4 from anywhere
-- Port names come from the KVM, or from local names you set in Settings
-- Admin password stored in the macOS Keychain
-- Pins the KVM's self-signed TLS certificate on first connect (trust on first use)
-- Optional launch at login
+## Continuous integration
 
-See the [User Guide](docs/USER_GUIDE_MACOS.md) for setup, everyday use, troubleshooting and the
-macOS Keychain prompt.
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and pull request:
 
-## Features (Windows 11)
+| Job | What it checks |
+|---|---|
+| Lint | shellcheck, black, pylint, fixture JSON |
+| macOS | `swift test`, universal app bundle (artifact) |
+| Windows client tests | the portable xUnit suite on Ubuntu, macOS and Windows |
+| Windows | x64 build + `--self-test` on Windows; Arm64 too on public repositories (artifacts) |
+| Linux distros | Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch, openSUSE Tumbleweed: pytest and a GTK/AppIndicator/keyring self-test under Xvfb |
+| Linux Python versions | pytest on Python 3.10 – 3.14 |
+| Linux package | sdist and wheel (artifact) |
 
-- Tray icon with the active port number drawn on it; hover for the port name
-- Left- or right-click menu with a checkmark on the active port; press 1–4 while it is open
-- Global hotkeys Ctrl+Alt+Win+1 – 4, with an optional "Switched to …" notification
-- Password stored in Windows Credential Manager; same certificate pinning as macOS
-- Optional launch at login (per-user Run key), single `.exe`, no installer or admin rights
+## Privacy
 
-## Build & install (macOS)
-
-```sh
-./macos/build-app.sh            # builds build/KVM Switcher.app (universal; signed with your
-                          # Apple Development/Developer ID identity if present, else ad-hoc)
-./macos/build-app.sh --install  # also copies it to /Applications and launches it
-```
-
-Requires Xcode / Swift 5.10+ and macOS 13+. On first launch, enter the KVM address (e.g.
-`glkvm.local` or its IP address) and the admin password in Settings, then click **Test Connection**.
-
-## Build (Windows)
-
-```sh
-./windows/build.sh   # needs Docker; builds in the .NET 10 SDK container
-```
-
-Produces self-contained single-file builds at `windows/publish/win-x64/KVMSwitcher.exe` and
-`windows/publish/win-arm64/KVMSwitcher.exe` (no .NET runtime needed on the target PC). On a
-Windows machine with the .NET 10 SDK you can instead run, from `windows/KvmSwitcher`:
-
-```powershell
-dotnet publish -c Release -r win-x64 --self-contained -p:PublishSingleFile=true
-```
-
-## KVM API used
-
-The GLKVM firmware is derived from PiKVM's kvmd. All replies are `{"ok": bool, "result": …}`.
-
-| Purpose      | Request                                                            |
-|--------------|--------------------------------------------------------------------|
-| Log in       | `POST /api/auth/login`, form body `user=admin&passwd=…` → `{token}` |
-| Switch state | `GET /api/switch`, header `token: …`                               |
-| Change port  | `POST /api/switch/set_active?port=N` (N is zero-based)             |
-| Port names   | `GET /api/system/get_config` → `result.config.port_names[]`        |
-
-`result.summary.active_port` is the active zero-based port, and `result.model.ports[]` lists the ports.
-The port names you set in the web UI live in the UI's config (`port_names`), not in `model.ports[].name`.
-Accounts with 2FA enabled are not supported.
-
-Do not commit `.har` captures: they contain live session tokens (they are gitignored).
+Do not commit `.har` captures: they contain live session tokens (`*.har` is gitignored).
+The fixtures are anonymized.

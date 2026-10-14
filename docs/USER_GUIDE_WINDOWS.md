@@ -3,7 +3,8 @@
 KVM Switcher puts your GL.iNet KVM's port switch in the Windows system tray. One click (or
 one keystroke) moves the KVM to another computer, without opening the KVM's web page.
 
-Looking for the Mac version? See the [macOS User Guide](USER_GUIDE_MACOS.md).
+Using a Mac or Linux? See the [macOS guide](USER_GUIDE_MACOS.md) or the
+[Linux guide](USER_GUIDE_LINUX.md).
 
 ## Contents
 
