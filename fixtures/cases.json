@@ -1,0 +1,95 @@
+{
+    "description": "Expected parse results shared by the macOS, Windows and Linux test suites. display_name assumes no local (app-side) port names are configured.",
+    "cases": [
+        {
+            "name": "web_ui_names_fill_empty_switch_names",
+            "switch": "switch_state.json",
+            "config": "get_config.json",
+            "expected": {
+                "active_port_index": 2,
+                "ports": [
+                    {
+                        "port_index": 0,
+                        "display_name": "Workstation",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 1,
+                        "display_name": "Laptop",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 2,
+                        "display_name": "Media PC & Games",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 3,
+                        "display_name": "Build Server",
+                        "has_video_link": true
+                    }
+                ]
+            }
+        },
+        {
+            "name": "switch_port_names_take_precedence",
+            "switch": "switch_state_named_ports.json",
+            "config": "get_config.json",
+            "expected": {
+                "active_port_index": 3,
+                "ports": [
+                    {
+                        "port_index": 0,
+                        "display_name": "Rack Server",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 1,
+                        "display_name": "Laptop",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 2,
+                        "display_name": "Media PC & Games",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 3,
+                        "display_name": "Build Server",
+                        "has_video_link": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "default_names_without_config",
+            "switch": "switch_state.json",
+            "config": "get_config_without_port_names.json",
+            "expected": {
+                "active_port_index": 2,
+                "ports": [
+                    {
+                        "port_index": 0,
+                        "display_name": "Port 1",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 1,
+                        "display_name": "Port 2",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 2,
+                        "display_name": "Port 3",
+                        "has_video_link": true
+                    },
+                    {
+                        "port_index": 3,
+                        "display_name": "Port 4",
+                        "has_video_link": true
+                    }
+                ]
+            }
+        }
+    ]
+}

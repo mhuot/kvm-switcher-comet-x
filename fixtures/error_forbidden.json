@@ -1,0 +1,7 @@
+{
+    "ok": false,
+    "result": {
+        "error": "ForbiddenError",
+        "error_msg": "Forbidden"
+    }
+}

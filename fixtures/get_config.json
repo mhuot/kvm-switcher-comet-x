@@ -1,0 +1,16 @@
+{
+    "ok": true,
+    "result": {
+        "config": {
+            "keymap": "en-us",
+            "mouse_jiggle": false,
+            "port_names": [
+                "Workstation",
+                "Laptop",
+                "Media PC & Games",
+                "  Build Server  "
+            ],
+            "show_cursor": true
+        }
+    }
+}
