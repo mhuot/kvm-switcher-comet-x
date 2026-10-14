@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kvm-switcher"
+version = "1.0.0"
+description = "Tray app and CLI for switching ports on a GL.iNet KVM"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+# PyGObject, GTK 3, AppIndicator and libsecret come from the distribution's packages
+# (see README.md); the API client and CLI use only the standard library.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=7", "trustme>=1.0", "pylint>=3", "black>=24"]
+
+[project.scripts]
+kvm-switcher = "kvm_switcher.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.black]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.pylint.main]
+# GObject-introspection modules are generated at runtime, so pylint cannot inspect them.
+ignored-modules = ["gi", "gi.repository"]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.design]
+max-attributes = 12
+max-args = 6
+max-positional-arguments = 6
