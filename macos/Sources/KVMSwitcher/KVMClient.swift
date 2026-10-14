@@ -54,11 +54,22 @@ final class KVMClient: NSObject, URLSessionDelegate {
     private var sessionToken: String?
     /// Set from the URLSession delegate queue, read on the main actor.
     private nonisolated let certificateMismatchFlag = LockedFlag()
+    private let sessionConfiguration: URLSessionConfiguration
+    private let passwordProvider: () -> String?
     private lazy var urlSession: URLSession = {
-        let configuration = URLSessionConfiguration.ephemeral
-        configuration.timeoutIntervalForRequest = 8
-        return URLSession(configuration: configuration, delegate: self, delegateQueue: nil)
+        sessionConfiguration.timeoutIntervalForRequest = 8
+        return URLSession(configuration: sessionConfiguration, delegate: self, delegateQueue: nil)
     }()
+
+    /// Both parameters exist so tests can stub the network and the Keychain.
+    init(
+        sessionConfiguration: URLSessionConfiguration = .ephemeral,
+        passwordProvider: @escaping () -> String? = { KeychainStore.password }
+    ) {
+        self.sessionConfiguration = sessionConfiguration
+        self.passwordProvider = passwordProvider
+        super.init()
+    }
 
     func forgetSession() {
         sessionToken = nil
@@ -124,7 +135,7 @@ final class KVMClient: NSObject, URLSessionDelegate {
     }
 
     private func login() async throws -> String {
-        guard let password = KeychainStore.password, !password.isEmpty else { throw KVMError.notConfigured }
+        guard let password = passwordProvider(), !password.isEmpty else { throw KVMError.notConfigured }
 
         var request = try makeRequest(method: "POST", path: "/api/auth/login")
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")

@@ -9,6 +9,11 @@ let package = Package(
             name: "KVMSwitcher",
             path: "Sources/KVMSwitcher",
             linkerSettings: [.linkedFramework("Carbon")]
-        )
+        ),
+        .testTarget(
+            name: "KVMSwitcherTests",
+            dependencies: ["KVMSwitcher"],
+            path: "Tests/KVMSwitcherTests"
+        ),
     ]
 )

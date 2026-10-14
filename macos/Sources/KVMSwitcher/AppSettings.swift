@@ -19,7 +19,8 @@ enum MenuBarLabelStyle: String, CaseIterable, Identifiable {
 
 /// Persisted, non-secret preferences. The password lives in the Keychain (see `KeychainStore`).
 enum AppSettings {
-    private static let defaults = UserDefaults.standard
+    /// Replaceable so tests can use a throwaway suite instead of the app's real preferences.
+    static var defaults = UserDefaults.standard
 
     private enum Key {
         static let host = "kvmHost"
