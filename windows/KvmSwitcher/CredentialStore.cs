@@ -43,9 +43,9 @@ internal static class CredentialStore
     [DllImport("advapi32.dll")]
     private static extern void CredFree(IntPtr buffer);
 
-    public static string? ReadPassword()
+    public static string? ReadPassword(string targetName = TargetName)
     {
-        if (!CredRead(TargetName, CredentialTypeGeneric, 0, out IntPtr credentialPointer))
+        if (!CredRead(targetName, CredentialTypeGeneric, 0, out IntPtr credentialPointer))
         {
             return null;
         }
@@ -66,11 +66,12 @@ internal static class CredentialStore
         }
     }
 
-    public static void SavePassword(string? newPassword)
+    /// <param name="targetName">Overridable so the self-test never touches the real credential.</param>
+    public static void SavePassword(string? newPassword, string targetName = TargetName)
     {
         if (string.IsNullOrEmpty(newPassword))
         {
-            CredDelete(TargetName, CredentialTypeGeneric, 0);
+            CredDelete(targetName, CredentialTypeGeneric, 0);
             return;
         }
 
@@ -80,7 +81,7 @@ internal static class CredentialStore
             var newCredential = new NativeCredential
             {
                 Type = CredentialTypeGeneric,
-                TargetName = TargetName,
+                TargetName = targetName,
                 CredentialBlob = passwordBlob,
                 CredentialBlobSize = newPassword.Length * 2,
                 Persist = CredentialPersistLocalMachine,

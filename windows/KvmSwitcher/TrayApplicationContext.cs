@@ -28,7 +28,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     public TrayApplicationContext()
     {
-        kvmClient = new KvmClient(settings);
+        kvmClient = new KvmClient(settings, () => CredentialStore.ReadPassword());
         notifyIcon = new NotifyIcon { ContextMenuStrip = portMenu, Visible = true };
         notifyIcon.MouseClick += (_, mouseEvent) =>
         {

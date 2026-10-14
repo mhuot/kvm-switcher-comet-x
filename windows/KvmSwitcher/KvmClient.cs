@@ -46,14 +46,18 @@ internal sealed class KvmClient : IDisposable
     private const string AdminUserName = "admin";
 
     private readonly AppSettings settings;
+    private readonly Func<string?> passwordProvider;
     private readonly HttpClient httpClient;
     private string? sessionToken;
     private volatile bool certificateMismatch;
 
-    public KvmClient(AppSettings settings)
+    /// <param name="passwordProvider">Returns the stored admin password (Credential Manager in the app).</param>
+    /// <param name="testHttpHandler">Replaces the network in tests; null uses a TLS-pinning handler.</param>
+    public KvmClient(AppSettings settings, Func<string?> passwordProvider, HttpMessageHandler? testHttpHandler = null)
     {
         this.settings = settings;
-        var httpHandler = new SocketsHttpHandler
+        this.passwordProvider = passwordProvider;
+        HttpMessageHandler httpHandler = testHttpHandler ?? new SocketsHttpHandler
         {
             SslOptions = new SslClientAuthenticationOptions
             {
@@ -152,7 +156,7 @@ internal sealed class KvmClient : IDisposable
 
     private async Task<string> LoginAsync()
     {
-        string? password = CredentialStore.ReadPassword();
+        string? password = passwordProvider();
         if (string.IsNullOrEmpty(password))
         {
             throw new KvmException(KvmException.NotConfigured);
