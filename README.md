@@ -69,3 +69,7 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 
 Do not commit `.har` captures: they contain live session tokens (`*.har` is gitignored).
 The fixtures are anonymized.
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).

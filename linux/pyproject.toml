@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "Tray app and CLI for switching ports on a GL.iNet KVM"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 # PyGObject, GTK 3, AppIndicator and libsecret come from the distribution's packages
 # (see README.md); the API client and CLI use only the standard library.
 dependencies = []
