@@ -1,0 +1,169 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+
+jobs:
+  lint:
+    name: Lint (shell, Python, fixtures)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: shellcheck
+        run: shellcheck macos/build-app.sh windows/build.sh linux/install.sh linux/ci/*.sh
+      - name: Fixtures are valid JSON
+        run: for fixture in fixtures/*.json; do python3 -m json.tool "$fixture" >/dev/null || exit 1; done
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: black and pylint
+        working-directory: linux
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --quiet -e '.[dev]'
+          .venv/bin/black --check src tests
+          .venv/bin/pylint src tests
+
+  macos:
+    name: macOS (Swift tests + app bundle)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Swift tests
+        working-directory: macos
+        run: swift test
+      - name: Build universal app (ad-hoc signed)
+        run: ./macos/build-app.sh
+      - name: Zip app
+        run: ditto -c -k --keepParent "macos/build/KVM Switcher.app" KVMSwitcher-macos.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: KVMSwitcher-macos
+          path: KVMSwitcher-macos.zip
+
+  windows-portable-tests:
+    name: Windows client tests on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: dotnet test
+        run: dotnet test windows/KvmSwitcher.Tests
+
+  windows:
+    name: Windows (${{ matrix.runtime }} build + self-test)
+    strategy:
+      fail-fast: false
+      matrix:
+        # Arm64 Windows runners are free for public repositories only, so private
+        # repositories run the x64 entry alone.
+        include: >-
+          ${{ fromJSON(github.event.repository.private
+          && '[{"runtime":"win-x64","runner":"windows-latest"}]'
+          || '[{"runtime":"win-x64","runner":"windows-latest"},{"runtime":"win-arm64","runner":"windows-11-arm"}]') }}
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: "10.0.x"
+      - name: Publish single-file exe
+        working-directory: windows/KvmSwitcher
+        run: >
+          dotnet publish -c Release -r ${{ matrix.runtime }} --self-contained true
+          -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=none
+          -o ../publish/${{ matrix.runtime }}
+      - name: Self-test (icons, settings layout, hotkeys, Credential Manager)
+        shell: pwsh
+        run: |
+          $logPath = Join-Path $env:RUNNER_TEMP "self-test.log"
+          $process = Start-Process -FilePath "windows/publish/${{ matrix.runtime }}/KVMSwitcher.exe" `
+              -ArgumentList "--self-test", "`"$logPath`"" -Wait -PassThru
+          Get-Content $logPath
+          if ($process.ExitCode -ne 0) { throw "Self-test failed with exit code $($process.ExitCode)" }
+      - uses: actions/upload-artifact@v7
+        with:
+          name: KVMSwitcher-${{ matrix.runtime }}
+          path: windows/publish/${{ matrix.runtime }}/KVMSwitcher.exe
+
+  linux-distros:
+    name: Linux ${{ matrix.image }}
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - ubuntu:22.04
+          - ubuntu:24.04
+          - debian:12
+          - debian:13
+          - fedora:latest
+          - archlinux:latest
+          - opensuse/tumbleweed:latest
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      # gnome-keyring-daemon needs to lock memory for the keyring self-test.
+      options: --cap-add IPC_LOCK
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install packages, run pytest and the GTK/keyring self-test
+        run: sh linux/ci/distro-test.sh "$GITHUB_WORKSPACE"
+
+  linux-python-versions:
+    name: Linux client on Python ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: pytest (API client, settings, CLI; GTK tests skip without PyGObject)
+        working-directory: linux
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --quiet -e '.[dev]'
+          .venv/bin/pytest -q
+
+  linux-package:
+    name: Linux sdist and wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Build
+        working-directory: linux
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install --quiet build
+          .venv/bin/python -m build
+      - uses: actions/upload-artifact@v7
+        with:
+          name: kvm-switcher-linux
+          path: linux/dist/*
