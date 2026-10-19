@@ -27,19 +27,20 @@ Using a Mac or Linux? See the [macOS guide](USER_GUIDE_MACOS.md) or the
 KVM Switcher is a single file, `KVMSwitcher.exe`. It doesn't need an installer, admin rights,
 or a separate .NET download.
 
-1. Pick the right build for your PC:
+1. Download the right file for your PC from
+   [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest):
 
-   | Your PC | Use |
+   | Your PC | Download |
    |---|---|
-   | Most Windows PCs (Intel or AMD processor) | `win-x64\KVMSwitcher.exe` |
-   | Arm PCs, e.g. Surface Pro with Snapdragon / Copilot+ PCs | `win-arm64\KVMSwitcher.exe` |
+   | Most Windows PCs (Intel or AMD processor) | `KVMSwitcher-<version>-win-x64.exe` |
+   | Arm PCs, e.g. Surface Pro with Snapdragon / Copilot+ PCs | `KVMSwitcher-<version>-win-arm64.exe` |
 
    Not sure? Open **Settings → System → About** and look at **System type**. "x64-based
    processor" means x64; "ARM-based processor" means Arm64.
 2. Create a folder for it, for example `C:\Users\<you>\AppData\Local\KVMSwitcher`, and copy
-   `KVMSwitcher.exe` there. Use a permanent location: **Launch at login** points at wherever
-   the file is.
-3. Double-click `KVMSwitcher.exe`. If you see a blue "Windows protected your PC" box, read
+   the downloaded file there. You can rename it to `KVMSwitcher.exe`. Use a permanent
+   location: **Launch at login** points at wherever the file is.
+3. Double-click the file. If you see a blue "Windows protected your PC" box, read
    the next section.
 
 ## The "Windows protected your PC" warning

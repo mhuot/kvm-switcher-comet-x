@@ -5,6 +5,9 @@ from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
 
 KVM Switcher is an independent project and is not affiliated with GL.iNet.
 
+**Download:** get the Mac app, the Windows exe or the Linux bundle from
+[Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest), then follow the user guide for your platform.
+
 Each platform is a separate native app with no shared code. They all implement the same
 [API contract](docs/API.md) and are tested against the same [fixtures](fixtures/).
 
@@ -66,6 +69,14 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 | Linux distros | Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch, openSUSE Tumbleweed: pytest and a GTK/AppIndicator/keyring self-test under Xvfb |
 | Linux Python versions | pytest on Python 3.10 – 3.14 |
 | Linux package | sdist and wheel (artifact) |
+| GitHub Release | Only on `v*` tags, after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux bundle and `SHA256SUMS.txt` |
+
+### Making a release
+
+1. Set the same version in `macos/Resources/Info.plist` (`CFBundleShortVersionString`),
+   `windows/KvmSwitcher/KvmSwitcher.csproj` (`<Version>`), `linux/pyproject.toml` and
+   `linux/src/kvm_switcher/__init__.py`, and commit.
+2. Tag and push: `git tag v1.0.0 && git push origin v1.0.0`.
 
 ## Privacy
 

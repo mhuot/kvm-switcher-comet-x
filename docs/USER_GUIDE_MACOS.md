@@ -22,15 +22,28 @@ Using Windows or Linux? See the [Windows guide](USER_GUIDE_WINDOWS.md) or the
 
 ## Install
 
-1. Open Terminal in the project folder and run:
-
-   ```sh
-   ./macos/build-app.sh --install
-   ```
-
-   This builds the app, copies **KVM Switcher** into your Applications folder and opens it.
-2. Look for a small two-screen icon in the menu bar, near the clock. The app has no Dock icon
+1. Download `KVMSwitcher-<version>-macos.zip` from
+   [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest) and double-click it to unzip.
+2. Drag **KVM Switcher** into your Applications folder, then open it.
+3. The first time, macOS says it can't check the app for malicious software. KVM Switcher
+   isn't signed with a paid Apple Developer ID, so macOS can't vouch for it. Click **Done**
+   (not **Move to Trash**), open **System Settings → Privacy & Security**, scroll down to
+   *"KVM Switcher" was blocked*, click **Open Anyway** and confirm. You only do this once
+   per version.
+4. Look for a small two-screen icon in the menu bar, near the clock. The app has no Dock icon
    and no main window. It lives only in the menu bar.
+
+### Building it yourself instead
+
+With Xcode or the Xcode command-line tools installed, open Terminal in the project folder and
+run:
+
+```sh
+./macos/build-app.sh --install
+```
+
+This builds the app, copies **KVM Switcher** into your Applications folder and opens it.
+There's no Gatekeeper warning for an app you built yourself.
 
 ## First-time setup
 
@@ -132,7 +145,8 @@ back, and you can choose **Always Allow**.
 
 You should normally only see it once. It can come back when:
 
-- **The app was rebuilt or updated.** macOS ties "Always Allow" to the app's code
+- **The app was rebuilt or updated.** The downloaded app has no Developer ID signature,
+  so expect the prompt once after each new version. macOS ties "Always Allow" to the app's code
   signature. `macos/build-app.sh` signs with your Apple Development certificate when one is
   available, so the approval survives rebuilds. Without a certificate, the app gets a new
   temporary signature on every build, and macOS treats each build as a different app.

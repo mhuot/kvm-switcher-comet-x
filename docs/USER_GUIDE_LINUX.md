@@ -43,18 +43,24 @@ Wayland and X11.
    | Arch, Manjaro, EndeavourOS | `sudo pacman -S python-gobject gtk3 libayatana-appindicator libsecret` |
    | openSUSE | `sudo zypper install python3-gobject python3-gobject-Gdk typelib-1_0-Gtk-3_0 typelib-1_0-AyatanaAppIndicator3-0_1 typelib-1_0-Secret-1` |
 
-2. From the project folder, run:
+2. Download `kvm-switcher-linux-<version>.tar.gz` from
+   [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest), then unpack it and run
+   the installer:
 
    ```sh
-   ./linux/install.sh
+   tar xzf kvm-switcher-linux-*.tar.gz
+   cd kvm-switcher-linux-*/
+   ./install.sh
    ```
+
+   (From a clone of the repository, run `./linux/install.sh` instead.)
 
    This installs KVM Switcher for your user only (no `sudo`), adds **KVM Switcher** to your
    applications menu, and adds the `kvm-switcher` command. If a package from step 1 is
    missing, the script says which one.
 3. Open **KVM Switcher** from your applications menu.
 
-To update later, get the new version and run `./linux/install.sh` again.
+To update later, download the new version and run its `./install.sh`.
 
 ## GNOME: make the panel icon appear
 
@@ -222,8 +228,10 @@ cautious before resetting.
 ## Uninstall
 
 ```sh
-./linux/install.sh --uninstall
+./install.sh --uninstall
 ```
+
+(Run it from the unpacked folder, or `./linux/install.sh --uninstall` from a clone.)
 
 This removes the app, the menu entry, the `kvm-switcher` command and the start-at-login
 entry. To remove everything else too:
