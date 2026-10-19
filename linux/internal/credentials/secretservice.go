@@ -141,13 +141,30 @@ func (opened *secretService) readSecret(itemPath dbus.ObjectPath) (string, error
 	return string(itemSecret.Value), nil
 }
 
-// defaultCollection returns the collection behind the "default" alias, creating and
-// unlocking it when needed (libsecret's COLLECTION_DEFAULT behaviour).
+// collectionExists reports whether a collection object answers at path.
+func (opened *secretService) collectionExists(collectionPath dbus.ObjectPath) bool {
+	_, err := opened.connection.Object(secretServiceName, collectionPath).
+		GetProperty(collectionInterface + ".Locked")
+	return err == nil
+}
+
+// defaultCollection returns the default collection, unlocking it when needed. Like
+// libsecret's COLLECTION_DEFAULT it tries the "default" alias object first, then the alias
+// lookup, then the "login" collection, and only then asks to create one (which needs a
+// password prompt).
 func (opened *secretService) defaultCollection() (dbus.ObjectPath, error) {
-	var collectionPath dbus.ObjectPath
-	if err := opened.service.Call(secretServiceInterface+".ReadAlias", 0, "default").
-		Store(&collectionPath); err != nil {
-		return "", err
+	collectionPath := dbus.ObjectPath("/org/freedesktop/secrets/aliases/default")
+	if !opened.collectionExists(collectionPath) {
+		collectionPath = noPrompt
+		if err := opened.service.Call(secretServiceInterface+".ReadAlias", 0, "default").
+			Store(&collectionPath); err != nil {
+			return "", err
+		}
+	}
+	if collectionPath == noPrompt || collectionPath == "" {
+		if loginPath := dbus.ObjectPath("/org/freedesktop/secrets/collection/login"); opened.collectionExists(loginPath) {
+			collectionPath = loginPath
+		}
 	}
 	if collectionPath == noPrompt || collectionPath == "" {
 		collectionProperties := map[string]dbus.Variant{
