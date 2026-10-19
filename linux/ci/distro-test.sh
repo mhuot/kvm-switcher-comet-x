@@ -36,7 +36,7 @@ case "${ID} ${ID_LIKE:-}" in
     *suse*)
         zypper --non-interactive --quiet install python3 python3-gobject python3-gobject-Gdk \
             typelib-1_0-Gtk-3_0 typelib-1_0-AyatanaAppIndicator3-0_1 typelib-1_0-Secret-1 \
-            xvfb-run dbus-1-daemon gnome-keyring adwaita-icon-theme >/dev/null
+            xvfb-run dbus-1-daemon gnome-keyring adwaita-icon-theme findutils >/dev/null
         ;;
     *)
         echo "Unsupported distribution: ${ID}" >&2
