@@ -14,7 +14,7 @@ launcher_path="$HOME/.local/bin/kvm-switcher"
 desktop_entry_path="$data_home/applications/net.mhuot.KVMSwitcher.desktop"
 
 if [ "${1:-}" = "--uninstall" ]; then
-    "$launcher_path" --version >/dev/null 2>&1 && pkill -f "kvm-switcher/venv/bin/kvm-switcher" || true
+    pkill -f "kvm-switcher/venv/bin/kvm-switcher" 2>/dev/null || true
     rm -rf "$data_home/kvm-switcher" "$launcher_path" "$desktop_entry_path"
     rm -f "${XDG_CONFIG_HOME:-$HOME/.config}/autostart/net.mhuot.KVMSwitcher.desktop"
     echo "KVM Switcher removed. Settings remain in ${XDG_CONFIG_HOME:-$HOME/.config}/kvm-switcher;"
