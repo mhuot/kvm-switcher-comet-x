@@ -1,0 +1,51 @@
+# nfpm builds the .deb, .rpm and Arch packages from the static binary; see linux/build.sh.
+# KVM_SWITCHER_VERSION and KVM_SWITCHER_ARCH (amd64 or arm64) are set by the build script,
+# which also copies the binary for that architecture to dist/package-binary/.
+name: kvm-switcher
+arch: ${KVM_SWITCHER_ARCH}
+platform: linux
+version: ${KVM_SWITCHER_VERSION}
+release: "1"
+section: utils
+priority: optional
+maintainer: Mike Huot <mhuot@mhuot.net>
+description: |
+  Switch GL.iNet Comet X (GL-RM4PE) KVM ports from the desktop panel.
+  A panel icon shows the active port; its menu, or a keyboard shortcut running
+  "kvm-switcher switch N", switches ports without opening the KVM's web page.
+  Also works from the command line on headless machines. Not affiliated with GL.iNet.
+vendor: KVM Switcher contributors
+homepage: https://github.com/mhuot/kvm-switcher-comet-x
+license: Apache-2.0
+contents:
+  - src: ./dist/package-binary/kvm-switcher
+    dst: /usr/bin/kvm-switcher
+    file_info:
+      mode: 0755
+  - src: ./packaging/net.mhuot.KVMSwitcher.desktop
+    dst: /usr/share/applications/net.mhuot.KVMSwitcher.desktop
+    file_info:
+      mode: 0644
+  - src: ../LICENSE
+    dst: /usr/share/licenses/kvm-switcher/LICENSE
+    file_info:
+      mode: 0644
+  - src: ./README.md
+    dst: /usr/share/doc/kvm-switcher/README.md
+    file_info:
+      mode: 0644
+# No dependencies: the binary is static and talks to the panel and keyring over D-Bus.
+# Settings windows use zenity or kdialog when one is installed.
+overrides:
+  deb:
+    suggests:
+      - zenity | kdialog
+      - gnome-shell-extension-appindicator
+  rpm:
+    suggests:
+      - zenity
+      - gnome-shell-extension-appindicator
+  archlinux:
+    suggests:
+      - zenity
+      - gnome-shell-extension-appindicator

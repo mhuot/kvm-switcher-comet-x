@@ -14,3 +14,6 @@ windows/publish/
 __pycache__/
 *.egg-info/
 .pytest_cache/
+
+# Linux build output
+linux/dist/

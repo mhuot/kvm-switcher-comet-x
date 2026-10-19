@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=KVM Switcher
+GenericName=KVM Port Switcher
+Comment=Switch GL.iNet Comet X KVM ports from the panel
+Exec=kvm-switcher
+Icon=video-display
+Terminal=false
+Categories=Utility;
+Keywords=kvm;switch;glinet;comet;
+StartupNotify=false
