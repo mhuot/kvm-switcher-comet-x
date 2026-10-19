@@ -10,7 +10,7 @@ import (
 
 // A minimal client for the freedesktop Secret Service D-Bus API, which GNOME Keyring,
 // KWallet (Plasma 5.97+) and KeePassXC all provide. It stores items the way libsecret does,
-// with an "xdg:schema" attribute, so it finds the password the earlier Python app saved.
+// with an "xdg:schema" attribute, so tools such as secret-tool and Seahorse see them.
 
 const (
 	secretServiceName      = "org.freedesktop.secrets"

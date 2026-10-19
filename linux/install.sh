@@ -12,17 +12,13 @@ data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 binary_path="$HOME/.local/bin/kvm-switcher"
 desktop_entry_path="$data_home/applications/net.mhuot.KVMSwitcher.desktop"
-# Left by the earlier Python version of KVM Switcher.
-legacy_python_directory="$data_home/kvm-switcher"
 
 stop_running_tray() {
     pkill -x kvm-switcher 2>/dev/null || true
-    pkill -f "kvm-switcher/venv/bin/kvm-switcher" 2>/dev/null || true
 }
 
 if [ "${1:-}" = "--uninstall" ]; then
     stop_running_tray
-    rm -rf "$legacy_python_directory"
     rm -f "$binary_path" "$desktop_entry_path" "$config_home/autostart/net.mhuot.KVMSwitcher.desktop"
     echo "KVM Switcher removed. Settings remain in $config_home/kvm-switcher;"
     echo "the password remains in your keyring under 'KVM Switcher'."
@@ -36,18 +32,13 @@ if [ ! -x "$source_directory/kvm-switcher" ]; then
 fi
 
 was_running=false
-if pgrep -x kvm-switcher >/dev/null 2>&1 || pgrep -f "kvm-switcher/venv/bin/kvm-switcher" >/dev/null 2>&1; then
+if pgrep -x kvm-switcher >/dev/null 2>&1; then
     was_running=true
     stop_running_tray
 fi
-if [ -d "$legacy_python_directory/venv" ]; then
-    echo "Removing the earlier Python version from $legacy_python_directory"
-    rm -rf "$legacy_python_directory"
-fi
 
 mkdir -p "$(dirname "$binary_path")" "$(dirname "$desktop_entry_path")"
-# Remove first: the Python version left a symlink here, and copying onto it would write
-# through to its target.
+# Remove first so a running copy or a symlink is replaced rather than written through.
 rm -f "$binary_path"
 cp "$source_directory/kvm-switcher" "$binary_path"
 chmod 755 "$binary_path"

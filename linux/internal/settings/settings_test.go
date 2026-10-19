@@ -52,16 +52,16 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
-// Settings written by the earlier Python app must load unchanged.
-func TestReadsPythonAppSettings(t *testing.T) {
+// Hand-edited files with nulls and stray types still load.
+func TestToleratesNullsAndWrongTypes(t *testing.T) {
 	settingsPath := filepath.Join(t.TempDir(), "settings.json")
-	pythonSettings := `{
+	storedSettings := `{
   "host": "glkvm.local",
   "local_port_names": ["Desk", "", 7, "Lab"],
   "label_style": "port_number",
   "pinned_certificate_fingerprint": null
 }`
-	if err := os.WriteFile(settingsPath, []byte(pythonSettings), 0o600); err != nil {
+	if err := os.WriteFile(settingsPath, []byte(storedSettings), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	loaded := settings.Open(settingsPath).Get()

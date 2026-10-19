@@ -1,7 +1,6 @@
 // Package settings stores the non-secret preferences as JSON under
-// $XDG_CONFIG_HOME/kvm-switcher/settings.json. The file format is the one the earlier
-// Python app wrote, so existing settings and the pinned certificate carry over.
-// The password lives in the desktop keyring (see package credentials).
+// $XDG_CONFIG_HOME/kvm-switcher/settings.json. The password lives in the desktop keyring
+// (see package credentials).
 package settings
 
 import (
