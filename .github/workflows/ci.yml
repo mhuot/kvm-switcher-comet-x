@@ -175,7 +175,7 @@ jobs:
       options: --cap-add IPC_LOCK
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           name: kvm-switcher-linux
           path: linux/dist
@@ -211,7 +211,7 @@ jobs:
           for app_version in "$mac_version" "$windows_version" "$linux_version"; do
             [ "$app_version" = "$tag_version" ] || { echo "::error::Version $app_version does not match expected version $tag_version for tag $tag"; exit 1; }
           done
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         with:
           path: artifacts
       - name: Collect release files
