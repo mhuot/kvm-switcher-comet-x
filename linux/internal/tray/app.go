@@ -303,15 +303,18 @@ func (app *App) updatePanel() {
 	app.mutex.Unlock()
 	current := app.settingsStore.Get()
 
+	// No icon name, so panels show these pixmaps and not a theme icon that looks different.
 	if lastError != "" {
-		app.item.SetIcon(IconError, errorPixmaps)
+		app.item.SetIcon("", GlyphPixmaps(GlyphError, 0))
 		app.item.SetLabel("", "")
 		app.item.SetToolTip(applicationTitle, lastError)
 	} else {
-		app.item.SetIcon(IconConnected, connectedPixmaps)
-		labelText := PanelLabel(switchState, current)
-		if switchInProgress {
-			labelText = "…"
+		labelText := ""
+		if switchInProgress || switchState == nil {
+			app.item.SetIcon("", GlyphPixmaps(GlyphBusy, 0))
+		} else {
+			app.item.SetIcon("", GlyphPixmaps(GlyphConnected, switchState.ActivePortIndex+1))
+			labelText = PanelLabel(switchState, current)
 		}
 		app.item.SetLabel(labelText, labelText)
 		toolTip := "Not connected yet"

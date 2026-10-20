@@ -6,7 +6,6 @@ import (
 
 	"github.com/mhuot/kvm-switcher-comet-x/linux/internal/kvm"
 	"github.com/mhuot/kvm-switcher-comet-x/linux/internal/settings"
-	"github.com/mhuot/kvm-switcher-comet-x/linux/internal/statusnotifier"
 )
 
 var sampleState = &kvm.SwitchState{
@@ -49,25 +48,5 @@ func TestMenuItemLabelEscapesUnderscoresAndNotesMissingVideo(t *testing.T) {
 	}
 	if gotLabel := MenuItemLabel(sampleState.Ports[1], settings.Settings{}); !strings.HasSuffix(gotLabel, "(no video)") {
 		t.Errorf("got %q", gotLabel)
-	}
-}
-
-func TestPixmapsAreARGBAtEverySize(t *testing.T) {
-	if len(connectedPixmaps) != len(pixmapSizes) || len(errorPixmaps) != len(pixmapSizes) {
-		t.Fatalf("%d and %d pixmaps, want %d", len(connectedPixmaps), len(errorPixmaps), len(pixmapSizes))
-	}
-	for _, pixmap := range append(append([]statusnotifier.Pixmap{}, connectedPixmaps...), errorPixmaps...) {
-		if len(pixmap.Data) != int(pixmap.Width*pixmap.Height*4) {
-			t.Fatalf("%dx%d pixmap has %d bytes", pixmap.Width, pixmap.Height, len(pixmap.Data))
-		}
-		opaquePixels := 0
-		for pixelOffset := 0; pixelOffset < len(pixmap.Data); pixelOffset += 4 {
-			if pixmap.Data[pixelOffset] > 128 {
-				opaquePixels++
-			}
-		}
-		if opaquePixels == 0 || opaquePixels == int(pixmap.Width*pixmap.Height) {
-			t.Fatalf("%dx%d pixmap is blank or solid", pixmap.Width, pixmap.Height)
-		}
 	}
 }

@@ -135,7 +135,7 @@ func checkPanelItemOverDBus() error {
 	}
 	defer item.Close()
 	clickedPorts := make(chan int, 1)
-	item.SetIcon(tray.IconConnected, nil)
+	item.SetIcon("", tray.GlyphPixmaps(tray.GlyphConnected, sampleState.ActivePortIndex+1))
 	item.SetLabel(tray.PanelLabel(&sampleState, sampleSettings), "")
 	item.SetToolTip("KVM Switcher", "Active: Media PC")
 	item.SetMenu(tray.BuildMenu(&sampleState, "", sampleSettings, tray.MenuActions{
@@ -157,7 +157,7 @@ func checkPanelItemOverDBus() error {
 
 	itemObject := panelConnection.Object(item.ServiceName(), statusnotifier.ItemPath)
 	for propertyName, wantValue := range map[string]any{
-		"IconName":      tray.IconConnected,
+		"IconName":      "",
 		"XAyatanaLabel": "Media PC",
 		"ItemIsMenu":    true,
 		"Menu":          statusnotifier.MenuPath,
@@ -169,6 +169,18 @@ func checkPanelItemOverDBus() error {
 		if propertyValue.Value() != wantValue {
 			return fmt.Errorf("%s is %v, want %v", propertyName, propertyValue.Value(), wantValue)
 		}
+	}
+
+	iconPixmapValue, err := itemObject.GetProperty(statusnotifier.ItemInterface + ".IconPixmap")
+	if err != nil {
+		return fmt.Errorf("read IconPixmap: %w", err)
+	}
+	var iconPixmaps []statusnotifier.Pixmap
+	if err := dbus.Store([]any{iconPixmapValue.Value()}, &iconPixmaps); err != nil {
+		return fmt.Errorf("decode IconPixmap: %w", err)
+	}
+	if len(iconPixmaps) == 0 || iconPixmaps[0].Width != 16 || len(iconPixmaps[0].Data) != 16*16*4 {
+		return fmt.Errorf("unexpected icon pixmaps (%d of them)", len(iconPixmaps))
 	}
 
 	menuObject := panelConnection.Object(item.ServiceName(), statusnotifier.MenuPath)

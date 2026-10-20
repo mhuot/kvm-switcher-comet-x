@@ -126,10 +126,9 @@ active port there.
 
 | You see | It means |
 |---|---|
-| Screen icon and a port name, e.g. **Media PC** | Connected. The KVM is on that port. |
-| Screen icon and **…** | A switch is in progress. |
-| Screen icon alone | Not connected yet, or **Panel shows** is set to **Icon only**. |
-| Warning icon | Something is wrong. Open the menu; the first line says what. |
+| Screen with a number, e.g. **3**, over a ⟷ arrow | Connected. The KVM is on port 3. The port name shows beside it unless **Panel shows** is set to **Icon only**. |
+| Screen with **…** | A switch is in progress, or the app hasn't connected yet. |
+| Screen with **!** over a broken arrow | Something is wrong. Open the menu; the first line says what. |
 
 In the menu, the active port is selected. "(no video)" after a port means the KVM isn't
 receiving a picture from that computer (it may be asleep or turned off).
