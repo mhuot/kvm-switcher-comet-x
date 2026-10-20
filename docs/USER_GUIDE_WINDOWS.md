@@ -96,7 +96,7 @@ The Settings window opens by itself the first time. Later, open it from the tray
 | Setting | What it does |
 |---|---|
 | **Port names** | Names to show for ports that have no name on the KVM. See [Naming your ports](#naming-your-ports). |
-| **Tray icon shows** | **Port number on icon** (default) draws the active port's number on the icon. **Plain icon** shows a monitor symbol instead. |
+| **Tray icon shows** | **Port number on icon** (default) cuts the active port's number out of the monitor. **Plain icon** leaves the monitor blank. |
 | **Global hotkeys** | Lets Ctrl+Alt+Win+1 to 4 switch ports from any app. On by default. |
 | **Show a notification when a hotkey switches ports** | Pops up "Switched to …" after a hotkey switch, so you know it worked. |
 | **Launch at login** | Starts KVM Switcher automatically when you sign in to Windows. |
@@ -115,10 +115,12 @@ There are three ways to switch:
 
 | You see | It means |
 |---|---|
-| Blue square with a number, e.g. **3** | Connected. The KVM is on port 3. |
-| Grey square with **…** | A switch is in progress. |
-| Grey square with **–** | The app hasn't connected yet. |
-| Red square with **!** | Something is wrong. Hover over the icon or open the menu to see what. |
+| Screen with a number, e.g. **3**, over a ⟷ arrow | Connected. The KVM is on port 3. |
+| Screen with **…** | A switch is in progress, or the app hasn't connected yet. |
+| Screen with **!** over a broken arrow | Something is wrong. Hover over the icon or open the menu to see what. |
+
+The icon is white on a dark taskbar and black on a light one, and follows the Windows mode
+setting when you change it.
 
 **Hover over the icon** to see the active port's name, for example "KVM: Media PC".
 (Unlike the Mac menu bar, the Windows tray can't show text beside an icon.)

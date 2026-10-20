@@ -30,14 +30,15 @@ internal static class SelfTest
 
         Check("render tray icons", () =>
         {
-            foreach (TrayIconRenderer.IconState iconState in Enum.GetValues<TrayIconRenderer.IconState>())
+            foreach (TrayGlyph.GlyphState glyphState in Enum.GetValues<TrayGlyph.GlyphState>())
             {
-                foreach (bool plainIcon in new[] { false, true })
+                foreach (int portNumber in new[] { 0, 3 })
                 {
-                    using Icon renderedIcon = TrayIconRenderer.Render(iconState, "3", plainIcon);
-                    if (renderedIcon.Width <= 0)
+                    using Icon renderedIcon = TrayIconRenderer.Render(glyphState, portNumber);
+                    if (renderedIcon.Width != SystemInformation.SmallIconSize.Width)
                     {
-                        throw new InvalidOperationException($"Empty icon for {iconState}");
+                        throw new InvalidOperationException(
+                            $"{glyphState} icon is {renderedIcon.Width} px, want {SystemInformation.SmallIconSize.Width}");
                     }
                 }
             }

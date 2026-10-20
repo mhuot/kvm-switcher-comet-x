@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <!--
-    Portable tests: the API client and settings have no Windows dependencies, so their source
+    Portable tests: the API client, settings and tray glyph have no Windows dependencies, so their source
     files are compiled in directly and the suite runs on Windows, macOS and Linux.
   -->
   <PropertyGroup>
@@ -16,6 +16,7 @@
   <ItemGroup>
     <Compile Include="../KvmSwitcher/KvmClient.cs" Link="Linked/KvmClient.cs" />
     <Compile Include="../KvmSwitcher/AppSettings.cs" Link="Linked/AppSettings.cs" />
+    <Compile Include="../KvmSwitcher/TrayGlyph.cs" Link="Linked/TrayGlyph.cs" />
   </ItemGroup>
 
   <ItemGroup>

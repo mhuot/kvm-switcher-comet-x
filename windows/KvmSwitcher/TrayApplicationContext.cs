@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Reflection;
+using Microsoft.Win32;
 
 namespace KvmSwitcher;
 
@@ -39,6 +40,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
         };
         portMenu.Opening += async (_, _) => await RefreshStateAsync();
         refreshTimer.Tick += async (_, _) => await RefreshStateAsync();
+        SystemEvents.UserPreferenceChanged += OnUserPreferenceChanged;
 
         UpdateTrayIcon();
         RebuildMenu();
@@ -56,6 +58,7 @@ internal sealed class TrayApplicationContext : ApplicationContext
     {
         if (disposing)
         {
+            SystemEvents.UserPreferenceChanged -= OnUserPreferenceChanged;
             refreshTimer.Dispose();
             globalHotKeys?.Dispose();
             notifyIcon.Visible = false;
@@ -144,29 +147,41 @@ internal sealed class TrayApplicationContext : ApplicationContext
 
     // ---- Tray icon ----
 
+    // Switching between light and dark mode recolours the taskbar, so redraw to match it.
+    private void OnUserPreferenceChanged(object sender, UserPreferenceChangedEventArgs preferenceEvent)
+    {
+        if (preferenceEvent.Category == UserPreferenceCategory.General)
+        {
+            UpdateTrayIcon();
+        }
+    }
+
     private void UpdateTrayIcon()
     {
-        TrayIconRenderer.IconState iconState;
+        TrayGlyph.GlyphState glyphState;
+        int portNumber = 0;
         if (switchInProgress)
         {
-            iconState = TrayIconRenderer.IconState.Switching;
+            glyphState = TrayGlyph.GlyphState.Busy;
         }
         else if (lastErrorMessage is not null)
         {
-            iconState = TrayIconRenderer.IconState.Error;
+            glyphState = TrayGlyph.GlyphState.Error;
         }
         else if (switchState is null)
         {
-            iconState = TrayIconRenderer.IconState.NotConnected;
+            glyphState = TrayGlyph.GlyphState.Busy;
         }
         else
         {
-            iconState = TrayIconRenderer.IconState.Connected;
+            glyphState = TrayGlyph.GlyphState.Connected;
+            if (settings.TrayIconStyle != TrayIconStyle.PlainIcon)
+            {
+                portNumber = switchState.ActivePortIndex + 1;
+            }
         }
 
-        string badgeText = switchState is null ? "" : $"{switchState.ActivePortIndex + 1}";
-        Icon newTrayIcon = TrayIconRenderer.Render(
-            iconState, badgeText, settings.TrayIconStyle == TrayIconStyle.PlainIcon);
+        Icon newTrayIcon = TrayIconRenderer.Render(glyphState, portNumber);
         notifyIcon.Icon = newTrayIcon;
         currentTrayIcon?.Dispose();
         currentTrayIcon = newTrayIcon;
