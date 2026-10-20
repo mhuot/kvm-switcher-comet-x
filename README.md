@@ -69,14 +69,14 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 | Linux tests | `go test -race` (API client against a fake KVM, settings, setup wizard, CLI) |
 | Linux package | static amd64/arm64 binaries, tarballs, `.deb`, `.rpm` and Arch packages (artifact) |
 | Linux distros | Installs the package on Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch and openSUSE Tumbleweed (plus three on Arm64), then runs the CLI, the tarball installer and a D-Bus self-test of the panel icon, menu and keyring |
-| GitHub Release | Only on `v*` tags, after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux packages and tarballs, and `SHA256SUMS.txt` |
+| GitHub Release | On `v*` tags (or workflow dispatch with release enabled), after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux packages and tarballs, and `SHA256SUMS.txt` |
 
 ### Making a release
 
 1. Set the same version in `macos/Resources/Info.plist` (`CFBundleShortVersionString`),
    `windows/KvmSwitcher/KvmSwitcher.csproj` (`<Version>`) and `linux/cmd/kvm-switcher/main.go`
    (`var version`), and commit.
-2. Tag and push: `git tag v1.0.0 && git push origin v1.0.0`.
+2. Tag and push: `git tag v1.0.0 && git push origin v1.0.0` (or trigger the CI workflow with `release: true`).
 
 ## Privacy
 

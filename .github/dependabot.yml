@@ -8,7 +8,7 @@ updates:
     directory: /windows/KvmSwitcher.Tests
     schedule:
       interval: monthly
-  - package-ecosystem: pip
+  - package-ecosystem: gomod
     directory: /linux
     schedule:
       interval: monthly
