@@ -75,14 +75,15 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
 
     private func updateStatusItemTitle() {
         guard let button = statusItem.button else { return }
-        let symbolName = lastErrorMessage == nil ? "display.2" : "exclamationmark.triangle"
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "KVM Switcher")
         button.imagePosition = .imageLeading
-        if switchInProgress {
-            button.title = " …"
-        } else if let switchState, lastErrorMessage == nil {
+        if lastErrorMessage != nil {
+            button.image = TrayGlyph.image(for: .error)
+            button.title = ""
+        } else if let switchState, !switchInProgress {
+            button.image = TrayGlyph.image(for: .connected(portNumber: switchState.activePortIndex + 1))
             button.title = menuBarLabel(for: switchState)
         } else {
+            button.image = TrayGlyph.image(for: .busy)
             button.title = ""
         }
         button.toolTip = lastErrorMessage ?? activePortName().map { "KVM: \($0)" }

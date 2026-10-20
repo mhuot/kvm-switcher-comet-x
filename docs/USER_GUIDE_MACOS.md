@@ -30,7 +30,7 @@ Using Windows or Linux? See the [Windows guide](USER_GUIDE_WINDOWS.md) or the
    (not **Move to Trash**), open **System Settings → Privacy & Security**, scroll down to
    *"KVM Switcher" was blocked*, click **Open Anyway** and confirm. You only do this once
    per version.
-4. Look for a small two-screen icon in the menu bar, near the clock. The app has no Dock icon
+4. Look for a small screen-over-an-arrow icon in the menu bar, near the clock. The app has no Dock icon
    and no main window. It lives only in the menu bar.
 
 ### Building it yourself instead
@@ -84,10 +84,9 @@ There are three ways to switch:
 
 | You see | It means |
 |---|---|
-| Screen icon and a port name, e.g. **Media PC** | Connected. The KVM is on that port. (Shows the port number or nothing instead if you changed **Menu bar shows** in Settings.) |
-| Screen icon and **…** | A switch is in progress. |
-| Screen icon alone | The app hasn't connected yet (or **Menu bar shows** is set to **Icon only**). |
-| Warning triangle ⚠︎ | Something is wrong. Open the menu; the first line says what. |
+| Screen with a number, e.g. **3**, and a port name | Connected. The KVM is on port 3. (Shows the port number or nothing beside the icon instead if you changed **Menu bar shows** in Settings.) |
+| Screen with **…** | A switch is in progress, or the app hasn't connected yet. |
+| Screen with **!** over a broken arrow | Something is wrong. Open the menu; the first line says what. |
 
 In the menu, a checkmark marks the active port. "(no video)" after a port means the KVM
 isn't receiving a picture from that computer (it may be asleep or turned off).
