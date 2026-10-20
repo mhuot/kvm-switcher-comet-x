@@ -37,7 +37,7 @@ jobs:
         run: shellcheck macos/build-app.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
       - name: Fixtures are valid JSON
         run: for fixture in fixtures/*.json; do jq empty "$fixture" || exit 1; done
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -124,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -138,7 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@v7
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
