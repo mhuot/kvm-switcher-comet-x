@@ -66,7 +66,7 @@ explains what to click.
 | Setting | What it does |
 |---|---|
 | **Port names** | Names to show for ports that have no name on the KVM. See [Naming your ports](#naming-your-ports). |
-| **Menu bar shows** | What appears next to the menu bar icon: the active **Port name** (default), the **Port number**, or **Icon only**. Long names are shortened with "…". |
+| **Menu bar shows** | What appears next to the menu bar icon: the active **Port name** (default) or **Icon only**. The port number is always on the icon. Long names are shortened with "…". |
 | **Global hotkeys** | Lets ⌃⌥⌘1 to ⌃⌥⌘4 switch ports from any app. On by default. |
 | **Launch at login** | Starts KVM Switcher automatically when you log in to your Mac. |
 
@@ -84,7 +84,7 @@ There are three ways to switch:
 
 | You see | It means |
 |---|---|
-| Screen with a number, e.g. **3**, and a port name | Connected. The KVM is on port 3. (Shows the port number or nothing beside the icon instead if you changed **Menu bar shows** in Settings.) |
+| Screen with a number, e.g. **3**, and a port name | Connected. The KVM is on port 3. (No name if **Menu bar shows** is set to **Icon only**.) |
 | Screen with **…** | A switch is in progress, or the app hasn't connected yet. |
 | Screen with **!** over a broken arrow | Something is wrong. Open the menu; the first line says what. |
 

@@ -81,7 +81,7 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
             button.title = ""
         } else if let switchState, !switchInProgress {
             button.image = TrayGlyph.image(for: .connected(portNumber: switchState.activePortIndex + 1))
-            button.title = menuBarLabel(for: switchState)
+            button.title = menuBarLabel()
         } else {
             button.image = TrayGlyph.image(for: .busy)
             button.title = ""
@@ -89,14 +89,12 @@ final class StatusMenuController: NSObject, NSMenuDelegate {
         button.toolTip = lastErrorMessage ?? activePortName().map { "KVM: \($0)" }
     }
 
-    private func menuBarLabel(for switchState: KVMSwitchState) -> String {
+    private func menuBarLabel() -> String {
         switch AppSettings.menuBarLabelStyle {
         case .iconOnly:
             return ""
-        case .portNumber:
-            return " \(switchState.activePortIndex + 1)"
         case .portName:
-            guard let portName = activePortName() else { return " \(switchState.activePortIndex + 1)" }
+            guard let portName = activePortName() else { return "" }
             // Keep long names from crowding out other menu bar items.
             guard portName.count > Self.maximumMenuBarNameLength else { return " \(portName)" }
             return " \(portName.prefix(Self.maximumMenuBarNameLength - 1))…"

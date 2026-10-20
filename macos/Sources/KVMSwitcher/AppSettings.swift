@@ -3,7 +3,6 @@ import Foundation
 /// What the menu bar shows next to the icon for the active port.
 enum MenuBarLabelStyle: String, CaseIterable, Identifiable {
     case portName
-    case portNumber
     case iconOnly
 
     var id: String { rawValue }
@@ -11,7 +10,6 @@ enum MenuBarLabelStyle: String, CaseIterable, Identifiable {
     var settingsTitle: String {
         switch self {
         case .portName: return "Port name"
-        case .portNumber: return "Port number"
         case .iconOnly: return "Icon only"
         }
     }
@@ -48,7 +46,12 @@ enum AppSettings {
     }
 
     static var menuBarLabelStyle: MenuBarLabelStyle {
-        get { defaults.string(forKey: Key.menuBarLabelStyle).flatMap(MenuBarLabelStyle.init) ?? .portName }
+        get {
+            let storedStyle = defaults.string(forKey: Key.menuBarLabelStyle)
+            // "portNumber" was removed once the icon itself showed the number.
+            if storedStyle == "portNumber" { return .iconOnly }
+            return storedStyle.flatMap(MenuBarLabelStyle.init) ?? .portName
+        }
         set { defaults.set(newValue.rawValue, forKey: Key.menuBarLabelStyle) }
     }
 
