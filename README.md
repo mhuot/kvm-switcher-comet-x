@@ -5,7 +5,7 @@ from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
 
 KVM Switcher is an independent project and is not affiliated with GL.iNet.
 
-**Download:** get the Mac app, the Windows exe or the Linux bundle from
+**Download:** get the Mac app, the Windows exe or the Linux package from
 [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest), then follow the user guide for your platform.
 
 Each platform is a separate native app with no shared code. They all implement the same
@@ -15,7 +15,7 @@ Each platform is a separate native app with no shared code. They all implement t
 |---|---|---|---|
 | macOS 13+ | [`macos/`](macos) | Swift, AppKit + SwiftUI | [USER_GUIDE_MACOS.md](docs/USER_GUIDE_MACOS.md) |
 | Windows 11 (x64, Arm64) | [`windows/`](windows) | C#, .NET 10 WinForms | [USER_GUIDE_WINDOWS.md](docs/USER_GUIDE_WINDOWS.md) |
-| Linux | [`linux/`](linux) | Python, GTK 3 + AppIndicator | [USER_GUIDE_LINUX.md](docs/USER_GUIDE_LINUX.md) |
+| Linux (x86_64, arm64) | [`linux/`](linux) | Go, StatusNotifierItem over D-Bus (no GTK) | [USER_GUIDE_LINUX.md](docs/USER_GUIDE_LINUX.md) |
 
 ## Features
 
@@ -24,9 +24,9 @@ Each platform is a separate native app with no shared code. They all implement t
 | Where it lives | Menu bar, active port name beside the icon | Tray, port number drawn on the icon, name on hover | Panel, active port name beside the icon |
 | Switch from the menu | Click, or press 1–4 | Click, or press 1–4 | Click, or press 1–4 |
 | Global shortcut | ⌃⌥⌘1–4 | Ctrl+Alt+Win+1–4 | Desktop shortcut running `kvm-switcher switch N` |
-| Password storage | Keychain | Credential Manager | Desktop keyring (libsecret) |
+| Password storage | Keychain | Credential Manager | Desktop keyring (Secret Service); file or environment when headless |
 | Start at login | Yes | Yes | Yes (XDG autostart) |
-| Command line | | | `kvm-switcher switch/status/list` |
+| Command line | | | `kvm-switcher switch/status/list/setup`, also headless |
 
 All three read port names from the KVM's web UI and pin the KVM's self-signed certificate on
 first use. None of them support KVMs with 2FA turned on.
@@ -36,7 +36,7 @@ first use. None of them support KVMs with 2FA turned on.
 ```
 macos/      Swift package: app, tests, build-app.sh
 windows/    KvmSwitcher (app), KvmSwitcher.Tests (portable tests), build.sh
-linux/      Python package, tests, install.sh, ci/ (distro test scripts)
+linux/      Go app (cmd/, internal/), build.sh, install.sh, packaging/, ci/ (distro tests)
 fixtures/   Anonymized KVM responses + cases.json: the expected results every test suite checks
 docs/       API contract and the three user guides
 .github/    CI workflow and Dependabot
@@ -48,7 +48,7 @@ docs/       API contract and the three user guides
 |---|---|---|
 | macOS | `./macos/build-app.sh` (`--install` copies it to /Applications) | `cd macos && swift test` |
 | Windows | `./windows/build.sh` (Docker, from macOS/Linux) | `dotnet test windows/KvmSwitcher.Tests` (any OS) |
-| Linux | `./linux/install.sh` | see [linux/README.md](linux/README.md); all distros: `./linux/ci/run-local.sh` |
+| Linux | `./linux/build.sh` (static binaries, tarballs, `.deb`, `.rpm`, Arch) | `cd linux && go test ./...`; all distros: `./linux/ci/run-local.sh` |
 
 `macos/build-app.sh` signs with your Apple Development or Developer ID identity when one is
 installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc.
@@ -62,20 +62,20 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 
 | Job | What it checks |
 |---|---|
-| Lint | shellcheck, black, pylint, fixture JSON |
+| Lint | shellcheck, gofmt, go vet, staticcheck, fixture JSON |
 | macOS | `swift test`, universal app bundle (artifact) |
 | Windows client tests | the portable xUnit suite on Ubuntu, macOS and Windows |
 | Windows | x64 build + `--self-test` on Windows; Arm64 too on public repositories (artifacts) |
-| Linux distros | Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch, openSUSE Tumbleweed: pytest and a GTK/AppIndicator/keyring self-test under Xvfb |
-| Linux Python versions | pytest on Python 3.10 – 3.14 |
-| Linux package | sdist and wheel (artifact) |
-| GitHub Release | Only on `v*` tags, after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux bundle and `SHA256SUMS.txt` |
+| Linux tests | `go test -race` (API client against a fake KVM, settings, setup wizard, CLI) |
+| Linux package | static amd64/arm64 binaries, tarballs, `.deb`, `.rpm` and Arch packages (artifact) |
+| Linux distros | Installs the package on Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch and openSUSE Tumbleweed (plus three on Arm64), then runs the CLI, the tarball installer and a D-Bus self-test of the panel icon, menu and keyring |
+| GitHub Release | Only on `v*` tags, after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux packages and tarballs, and `SHA256SUMS.txt` |
 
 ### Making a release
 
 1. Set the same version in `macos/Resources/Info.plist` (`CFBundleShortVersionString`),
-   `windows/KvmSwitcher/KvmSwitcher.csproj` (`<Version>`), `linux/pyproject.toml` and
-   `linux/src/kvm_switcher/__init__.py`, and commit.
+   `windows/KvmSwitcher/KvmSwitcher.csproj` (`<Version>`) and `linux/cmd/kvm-switcher/main.go`
+   (`var version`), and commit.
 2. Tag and push: `git tag v1.0.0 && git push origin v1.0.0`.
 
 ## Privacy

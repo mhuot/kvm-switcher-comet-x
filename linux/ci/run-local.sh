@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs linux/ci/distro-test.sh in Docker for every distribution CI covers.
+# Builds the Linux packages, then runs linux/ci/distro-test.sh in Docker for every
+# distribution CI covers.
 #   usage: linux/ci/run-local.sh [image ...]
 set -u
 cd "$(dirname "$0")/../.." || exit 1
@@ -11,6 +12,8 @@ else
         archlinux:latest opensuse/tumbleweed:latest)
 fi
 
+./linux/build.sh >/dev/null || exit 1
+
 failed_images=()
 for distro_image in "${distro_images[@]}"; do
     # Arch publishes amd64 images only. IPC_LOCK lets gnome-keyring-daemon lock its memory.
@@ -18,7 +21,7 @@ for distro_image in "${distro_images[@]}"; do
     [[ "$distro_image" == archlinux* ]] && platform_arguments=(--platform linux/amd64)
     # The ${array[@]+...} form keeps empty arrays safe under set -u in macOS's bash 3.2.
     if ! docker run --rm --cap-add IPC_LOCK ${platform_arguments[@]+"${platform_arguments[@]}"} \
-        -v "$PWD":/repo:ro "$distro_image" sh /repo/linux/ci/distro-test.sh /repo; then
+        -v "$PWD":/repo:ro "$distro_image" sh /repo/linux/ci/distro-test.sh /repo/linux/dist; then
         failed_images+=("$distro_image")
     fi
 done

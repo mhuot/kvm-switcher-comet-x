@@ -20,24 +20,26 @@ env:
 
 jobs:
   lint:
-    name: Lint (shell, Python, fixtures)
+    name: Lint (shell, Go, fixtures)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck macos/build-app.sh windows/build.sh linux/install.sh linux/ci/*.sh
+        run: shellcheck macos/build-app.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
       - name: Fixtures are valid JSON
-        run: for fixture in fixtures/*.json; do python3 -m json.tool "$fixture" >/dev/null || exit 1; done
-      - uses: actions/setup-python@v7
+        run: for fixture in fixtures/*.json; do jq empty "$fixture" || exit 1; done
+      - uses: actions/setup-go@v6
         with:
-          python-version: "3.13"
-      - name: black and pylint
+          # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
+          go-version: "1.26.x"
+          cache-dependency-path: linux/go.sum
+      - name: gofmt, go vet and staticcheck
         working-directory: linux
         run: |
-          python -m venv .venv
-          .venv/bin/pip install --quiet -e '.[dev]'
-          .venv/bin/black --check src tests
-          .venv/bin/pylint src tests
+          unformatted_files=$(gofmt -l .)
+          if [ -n "$unformatted_files" ]; then echo "::error::Not gofmt-formatted: $unformatted_files"; exit 1; fi
+          go vet ./...
+          go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...
 
   macos:
     name: macOS (Swift tests + app bundle)
@@ -108,71 +110,73 @@ jobs:
           name: KVMSwitcher-${{ matrix.runtime }}
           path: windows/publish/${{ matrix.runtime }}/KVMSwitcher.exe
 
+  linux-tests:
+    name: Linux app tests (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
+          go-version: "1.26.x"
+          cache-dependency-path: linux/go.sum
+      - name: go test (API client against a fake KVM, settings, setup wizard, CLI)
+        working-directory: linux
+        run: go test -race ./...
+
+  linux-package:
+    name: Linux binaries and packages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v6
+        with:
+          # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
+          go-version: "1.26.x"
+          cache-dependency-path: linux/go.sum
+      - name: Build static binaries, tarballs, .deb, .rpm and Arch packages
+        run: ./linux/build.sh
+      - uses: actions/upload-artifact@v7
+        with:
+          name: kvm-switcher-linux
+          path: linux/dist/*
+
   linux-distros:
-    name: Linux ${{ matrix.image }}
+    name: Linux ${{ matrix.image }} (${{ matrix.runner }})
+    needs: linux-package
     strategy:
       fail-fast: false
       matrix:
-        image:
-          - ubuntu:22.04
-          - ubuntu:24.04
-          - debian:12
-          - debian:13
-          - fedora:latest
-          - archlinux:latest
-          - opensuse/tumbleweed:latest
-    runs-on: ubuntu-latest
+        include:
+          - { image: "ubuntu:22.04", runner: ubuntu-latest }
+          - { image: "ubuntu:24.04", runner: ubuntu-latest }
+          - { image: "debian:12", runner: ubuntu-latest }
+          - { image: "debian:13", runner: ubuntu-latest }
+          - { image: "fedora:latest", runner: ubuntu-latest }
+          - { image: "archlinux:latest", runner: ubuntu-latest }
+          - { image: "opensuse/tumbleweed:latest", runner: ubuntu-latest }
+          # Arm64 (Raspberry Pi OS 64-bit and Arm laptops use the same packages).
+          - { image: "ubuntu:24.04", runner: ubuntu-24.04-arm }
+          - { image: "debian:12", runner: ubuntu-24.04-arm }
+          - { image: "fedora:latest", runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
     container:
       image: ${{ matrix.image }}
       # gnome-keyring-daemon needs to lock memory for the keyring self-test.
       options: --cap-add IPC_LOCK
     steps:
       - uses: actions/checkout@v7
-      - name: Install packages, run pytest and the GTK/keyring self-test
-        run: sh linux/ci/distro-test.sh "$GITHUB_WORKSPACE"
-
-  linux-python-versions:
-    name: Linux client on Python ${{ matrix.python-version }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: pytest (API client, settings, CLI; GTK tests skip without PyGObject)
-        working-directory: linux
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --quiet -e '.[dev]'
-          .venv/bin/pytest -q
-
-  linux-package:
-    name: Linux sdist and wheel
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.13"
-      - name: Build
-        working-directory: linux
-        run: |
-          python -m venv .venv
-          .venv/bin/pip install --quiet build
-          .venv/bin/python -m build
-      - uses: actions/upload-artifact@v7
+      - uses: actions/download-artifact@v7
         with:
           name: kvm-switcher-linux
-          path: linux/dist/*
+          path: linux/dist
+      - name: Install the package, then run the CLI, tarball installer and D-Bus self-test
+        run: sh linux/ci/distro-test.sh "$GITHUB_WORKSPACE/linux/dist"
 
   release:
     name: GitHub Release
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [lint, macos, windows-portable-tests, windows, linux-distros, linux-python-versions, linux-package]
+    needs: [lint, macos, windows-portable-tests, windows, linux-tests, linux-package, linux-distros]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -183,10 +187,9 @@ jobs:
           tag_version="${GITHUB_REF_NAME#v}"
           mac_version=$(grep -A1 CFBundleShortVersionString macos/Resources/Info.plist | sed -n 's#.*<string>\(.*\)</string>.*#\1#p')
           windows_version=$(sed -n 's#.*<Version>\(.*\)</Version>.*#\1#p' windows/KvmSwitcher/KvmSwitcher.csproj)
-          linux_version=$(sed -n 's#^version = "\(.*\)"#\1#p' linux/pyproject.toml)
-          linux_module_version=$(sed -n 's#^__version__ = "\(.*\)"#\1#p' linux/src/kvm_switcher/__init__.py)
-          echo "tag $tag_version, macOS $mac_version, Windows $windows_version, Linux $linux_version / $linux_module_version"
-          for app_version in "$mac_version" "$windows_version" "$linux_version" "$linux_module_version"; do
+          linux_version=$(sed -n 's#^var version = "\(.*\)"$#\1#p' linux/cmd/kvm-switcher/main.go)
+          echo "tag $tag_version, macOS $mac_version, Windows $windows_version, Linux $linux_version"
+          for app_version in "$mac_version" "$windows_version" "$linux_version"; do
             [ "$app_version" = "$tag_version" ] || { echo "::error::Version $app_version does not match tag $GITHUB_REF_NAME"; exit 1; }
           done
       - uses: actions/download-artifact@v7
@@ -199,8 +202,7 @@ jobs:
           cp artifacts/KVMSwitcher-macos/KVMSwitcher-macos.zip "release/KVMSwitcher-${tag_version}-macos.zip"
           cp artifacts/KVMSwitcher-win-x64/KVMSwitcher.exe "release/KVMSwitcher-${tag_version}-win-x64.exe"
           cp artifacts/KVMSwitcher-win-arm64/KVMSwitcher.exe "release/KVMSwitcher-${tag_version}-win-arm64.exe"
-          git archive --format=tar.gz --prefix="kvm-switcher-linux-${tag_version}/" \
-            -o "release/kvm-switcher-linux-${tag_version}.tar.gz" HEAD:linux
+          cp artifacts/kvm-switcher-linux/* release/
           (cd release && sha256sum -- * > SHA256SUMS.txt)
           ls -l release
       - name: Create release
