@@ -90,7 +90,7 @@ func TestMenuEditsPortNamesLabelStyleAndAutostart(t *testing.T) {
 
 	runScripted(t, store,
 		"4", "Desk", "", "Lab", "", // port names
-		"5", "2", // panel shows: port number
+		"5", "2", // panel shows: icon only
 		"6", "1", // start at login: on
 		"", // Enter: done
 	)
@@ -99,7 +99,7 @@ func TestMenuEditsPortNamesLabelStyleAndAutostart(t *testing.T) {
 	if strings.Join(current.LocalPortNames, ",") != "Desk,,Lab," {
 		t.Errorf("port names %q", current.LocalPortNames)
 	}
-	if current.LabelStyle != settings.LabelStylePortNumber {
+	if current.LabelStyle != settings.LabelStyleIconOnly {
 		t.Errorf("label style %q", current.LabelStyle)
 	}
 	if !autostart.IsEnabled() {

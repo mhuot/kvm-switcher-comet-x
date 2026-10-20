@@ -106,7 +106,7 @@ Open **Settings…** again to see every setting in one list. Pick one and choose
 |---|---|
 | **Test connection** | Connects with the saved address and password and shows the result. |
 | **Port names** | Names to show for ports that have no name on the KVM. See [Naming your ports](#naming-your-ports). |
-| **Panel shows** | What appears beside the panel icon: the active **Port name** (default), the **Port number**, or **Icon only**. Long names are shortened with "…". |
+| **Panel shows** | What appears beside the panel icon: the active **Port name** (default) or **Icon only**. The port number is always on the icon. Long names are shortened with "…". |
 | **Start when I log in** | Starts KVM Switcher automatically after you log in. |
 | **Reset pinned certificate** | See [Certificate warning](#certificate-warning). |
 

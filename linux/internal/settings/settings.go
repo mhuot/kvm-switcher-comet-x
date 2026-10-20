@@ -15,19 +15,21 @@ import (
 
 // Label styles for the text beside the panel icon.
 const (
-	LabelStylePortName   = "port_name"
-	LabelStylePortNumber = "port_number"
-	LabelStyleIconOnly   = "icon_only"
+	LabelStylePortName = "port_name"
+	LabelStyleIconOnly = "icon_only"
 )
 
+// legacyLabelStylePortNumber showed the port number beside the icon. The icon now has the
+// number in it, so files that still say this load as icon only.
+const legacyLabelStylePortNumber = "port_number"
+
 // LabelStyles lists every valid label style in display order.
-var LabelStyles = []string{LabelStylePortName, LabelStylePortNumber, LabelStyleIconOnly}
+var LabelStyles = []string{LabelStylePortName, LabelStyleIconOnly}
 
 // LabelStyleTitles are the names shown to the user for each label style.
 var LabelStyleTitles = map[string]string{
-	LabelStylePortName:   "Port name",
-	LabelStylePortNumber: "Port number",
-	LabelStyleIconOnly:   "Icon only",
+	LabelStylePortName: "Port name",
+	LabelStyleIconOnly: "Icon only",
 }
 
 // Settings are the user's preferences.
@@ -164,6 +166,8 @@ func readFile(path string) (Settings, time.Time) {
 	loaded.PinnedCertificateFingerprint, _ = stored.PinnedCertificateFingerprint.(string)
 	if labelStyle, isString := stored.LabelStyle.(string); isString && validLabelStyle(labelStyle) {
 		loaded.LabelStyle = labelStyle
+	} else if labelStyle == legacyLabelStylePortNumber {
+		loaded.LabelStyle = LabelStyleIconOnly
 	}
 	if storedNames, isList := stored.LocalPortNames.([]any); isList {
 		for _, storedName := range storedNames {

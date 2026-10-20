@@ -18,9 +18,8 @@ var sampleState = &kvm.SwitchState{
 
 func TestPanelLabelStyles(t *testing.T) {
 	for labelStyle, expectedLabel := range map[string]string{
-		settings.LabelStylePortName:   "A very long port name t…",
-		settings.LabelStylePortNumber: "2",
-		settings.LabelStyleIconOnly:   "",
+		settings.LabelStylePortName: "A very long port name t…",
+		settings.LabelStyleIconOnly: "",
 	} {
 		if gotLabel := PanelLabel(sampleState, settings.Settings{LabelStyle: labelStyle}); gotLabel != expectedLabel {
 			t.Errorf("style %s: got %q, want %q", labelStyle, gotLabel, expectedLabel)

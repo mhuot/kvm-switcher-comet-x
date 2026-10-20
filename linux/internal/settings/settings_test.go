@@ -52,7 +52,8 @@ func TestRoundTrip(t *testing.T) {
 	}
 }
 
-// Hand-edited files with nulls and stray types still load.
+// Hand-edited files with nulls and stray types still load, and the removed "port_number"
+// label style loads as icon only.
 func TestToleratesNullsAndWrongTypes(t *testing.T) {
 	settingsPath := filepath.Join(t.TempDir(), "settings.json")
 	storedSettings := `{
@@ -68,7 +69,7 @@ func TestToleratesNullsAndWrongTypes(t *testing.T) {
 	want := settings.Settings{
 		Host:           "glkvm.local",
 		LocalPortNames: []string{"Desk", "", "Lab"},
-		LabelStyle:     settings.LabelStylePortNumber,
+		LabelStyle:     settings.LabelStyleIconOnly,
 	}
 	if !reflect.DeepEqual(loaded, want) {
 		t.Fatalf("loaded %+v, want %+v", loaded, want)

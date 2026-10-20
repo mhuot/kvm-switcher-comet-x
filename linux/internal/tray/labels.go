@@ -16,13 +16,9 @@ func PanelLabel(switchState *kvm.SwitchState, current settings.Settings) string 
 	if switchState == nil || current.LabelStyle == settings.LabelStyleIconOnly {
 		return ""
 	}
-	portNumber := strconv.Itoa(switchState.ActivePortIndex + 1)
-	if current.LabelStyle == settings.LabelStylePortNumber {
-		return portNumber
-	}
 	activePort, found := switchState.ActivePort()
 	if !found {
-		return portNumber
+		return ""
 	}
 	nameCharacters := []rune(activePort.DisplayName(current))
 	if len(nameCharacters) > MaximumLabelLength {
