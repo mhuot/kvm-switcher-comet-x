@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: shellcheck
-        run: shellcheck macos/build-app.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
+        run: shellcheck macos/build-app.sh macos/make-dmg.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
       - name: Fixtures are valid JSON
         run: for fixture in fixtures/*.json; do jq empty "$fixture" || exit 1; done
       - uses: actions/setup-go@v6
