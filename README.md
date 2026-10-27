@@ -5,7 +5,7 @@ from the macOS menu bar, the Windows 11 system tray, or a Linux desktop panel.
 
 KVM Switcher is an independent project and is not affiliated with GL.iNet.
 
-**Download:** get the Mac app, the Windows exe or the Linux package from
+**Download:** get the Mac .dmg, the Windows installer or exe, or the Linux package from
 [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest), then follow the user guide for your platform.
 
 Each platform is a separate native app with no shared code. They all implement the same
@@ -31,14 +31,17 @@ Each platform is a separate native app with no shared code. They all implement t
 All three read port names from the KVM's web UI and pin the KVM's self-signed certificate on
 first use. None of them support KVMs with 2FA turned on.
 
+Release builds are signed: the Mac app and `.dmg` with a Developer ID and notarized by Apple,
+the Windows exes and installers with Azure Artifact Signing. See [SIGNING.md](docs/SIGNING.md).
+
 ## Repository layout
 
 ```
-macos/      Swift package: app, tests, build-app.sh
-windows/    KvmSwitcher (app), KvmSwitcher.Tests (portable tests), build.sh
+macos/      Swift package: app, tests, build-app.sh, make-dmg.sh
+windows/    KvmSwitcher (app), KvmSwitcher.Tests (portable tests), build.sh, packaging/ (installer, signing)
 linux/      Go app (cmd/, internal/), build.sh, install.sh, packaging/, ci/ (distro tests)
 fixtures/   Anonymized KVM responses + cases.json: the expected results every test suite checks
-docs/       API contract and the three user guides
+docs/       API contract, code signing and the three user guides
 .github/    CI workflow and Dependabot
 ```
 
@@ -55,6 +58,9 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 `windows/build.sh` writes self-contained single-file builds to
 `windows/publish/win-x64/KVMSwitcher.exe` and `windows/publish/win-arm64/KVMSwitcher.exe`.
 `KVMSwitcher.exe --self-test` checks the Windows-only parts without a KVM.
+`./macos/make-dmg.sh` packages the built app as a `.dmg`, and on Windows
+`windows/packaging/make-installers.ps1` builds the Inno Setup installers from the exes.
+[SIGNING.md](docs/SIGNING.md) covers signing either one locally.
 
 ## Continuous integration
 
@@ -63,13 +69,16 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
 | Job | What it checks |
 |---|---|
 | Lint | shellcheck, gofmt, go vet, staticcheck, fixture JSON |
-| macOS | `swift test`, universal app bundle (artifact) |
+| macOS | `swift test`, universal app bundle (artifact), unsigned `.dmg` |
+| macOS signed | On `v*` tags and manual runs: signs, notarizes and staples the app and `.dmg`, then checks them (artifact) |
 | Windows client tests | the portable xUnit suite on Ubuntu, macOS and Windows |
 | Windows | x64 build + `--self-test` on Windows; Arm64 too on public repositories (artifacts) |
+| Windows installers | Builds both installers, then installs and uninstalls the x64 one quietly |
+| Windows signed | On `v*` tags and manual runs: signs both exes, builds both installers signed (uninstallers too), then checks every signature (artifact) |
 | Linux tests | `go test -race` (API client against a fake KVM, settings, setup wizard, CLI) |
 | Linux package | static amd64/arm64 binaries, tarballs, `.deb`, `.rpm` and Arch packages (artifact) |
 | Linux distros | Installs the package on Ubuntu 22.04/24.04, Debian 12/13, Fedora, Arch and openSUSE Tumbleweed (plus three on Arm64), then runs the CLI, the tarball installer and a D-Bus self-test of the panel icon, menu and keyring |
-| GitHub Release | On `v*` tags (or workflow dispatch with release enabled), after every job above passes: checks the app versions match the tag, then publishes the Mac zip, both Windows exes, the Linux packages and tarballs, and `SHA256SUMS.txt` |
+| GitHub Release | On `v*` tags (or workflow dispatch with release enabled), after every job above passes: checks the app versions match the tag, then publishes the Mac `.dmg`, both Windows installers and exes, the Linux packages and tarballs, and `SHA256SUMS.txt` |
 
 ### Making a release
 
@@ -77,6 +86,9 @@ installed (so the Keychain's "Always Allow" survives rebuilds), otherwise ad-hoc
    `windows/KvmSwitcher/KvmSwitcher.csproj` (`<Version>`) and `linux/cmd/kvm-switcher/main.go`
    (`var version`), and commit.
 2. Tag and push: `git tag v1.0.0 && git push origin v1.0.0` (or trigger the CI workflow with `release: true`).
+
+The Mac and Windows builds are signed only when the repository has the signing secrets and the
+`release` environment described in [SIGNING.md](docs/SIGNING.md); without them they're published unsigned.
 
 ## Privacy
 

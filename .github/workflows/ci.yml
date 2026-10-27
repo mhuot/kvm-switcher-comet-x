@@ -21,7 +21,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Only pull requests cancel older runs: a release or signing run never stops half way.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
@@ -32,12 +33,14 @@ jobs:
     name: Lint (shell, Go, fixtures)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: shellcheck
-        run: shellcheck macos/build-app.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
+        run: shellcheck macos/build-app.sh macos/make-dmg.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
       - name: Fixtures are valid JSON
         run: for fixture in fixtures/*.json; do jq empty "$fixture" || exit 1; done
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -54,7 +57,9 @@ jobs:
     name: macOS (Swift tests + app bundle)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Swift tests
         working-directory: macos
         run: swift test
@@ -62,10 +67,70 @@ jobs:
         run: ./macos/build-app.sh
       - name: Zip app
         run: ditto -c -k --keepParent "macos/build/KVM Switcher.app" KVMSwitcher-macos.zip
-      - uses: actions/upload-artifact@v7
+      - name: Make an unsigned .dmg (checks make-dmg.sh)
+        run: ./macos/make-dmg.sh
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-macos
           path: KVMSwitcher-macos.zip
+
+  macos-signed:
+    name: macOS signed and notarized .dmg
+    # Signing and notarizing take minutes, so they run for releases and by hand, not on every push.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: macos
+    runs-on: macos-latest
+    environment: release  # allowed for main and v* tags only
+    env:
+      HAS_MAC_CERT: ${{ secrets.MAC_CERT_P12 != '' }}
+      HAS_NOTARY: ${{ secrets.APPLE_APP_PASSWORD != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          name: KVMSwitcher-macos
+      - name: Unpack the app
+        run: ditto -x -k KVMSwitcher-macos.zip macos/build
+      - name: Import the signing certificate
+        if: env.HAS_MAC_CERT == 'true'
+        env:
+          MAC_CERT_P12: ${{ secrets.MAC_CERT_P12 }}
+          MAC_CERT_PASSWORD: ${{ secrets.MAC_CERT_PASSWORD }}
+        run: |
+          echo "$MAC_CERT_P12" | base64 --decode > cert.p12
+          security create-keychain -p ci build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p ci build.keychain
+          security import cert.p12 -k build.keychain -P "$MAC_CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k ci build.keychain
+          rm cert.p12
+      - name: Sign, notarize and staple the app and the .dmg
+        env:
+          APPLE_SIGN_IDENTITY: ${{ secrets.APPLE_SIGN_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+        run: ./macos/make-dmg.sh
+      - name: Check the signatures and notarization tickets
+        if: env.HAS_MAC_CERT == 'true'
+        run: |
+          app_bundle="macos/build/KVM Switcher.app"
+          dmg_path=$(ls macos/build/KVMSwitcher-*.dmg)
+          codesign -dv --verbose=2 "$app_bundle"
+          codesign --verify --deep --strict "$app_bundle"
+          codesign --verify --strict "$dmg_path"
+          if [ "$HAS_NOTARY" = "true" ]; then
+            xcrun stapler validate "$app_bundle"
+            xcrun stapler validate "$dmg_path"
+            spctl -a -vv "$app_bundle"
+            spctl -a -t open --context context:primary-signature -vv "$dmg_path"
+          fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: KVMSwitcher-macos-dmg
+          path: macos/build/KVMSwitcher-*.dmg
 
   windows-portable-tests:
     name: Windows client tests on ${{ matrix.os }}
@@ -75,8 +140,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           dotnet-version: "10.0.x"
       - name: dotnet test
@@ -95,8 +162,10 @@ jobs:
           || '[{"runtime":"win-x64","runner":"windows-latest"},{"runtime":"win-arm64","runner":"windows-11-arm"}]') }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           dotnet-version: "10.0.x"
       - name: Publish single-file exe
@@ -114,17 +183,132 @@ jobs:
               -ArgumentList "--self-test", "`"$logPath`"" -Wait -PassThru
           Get-Content $logPath
           if ($process.ExitCode -ne 0) { throw "Self-test failed with exit code $($process.ExitCode)" }
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-${{ matrix.runtime }}
           path: windows/publish/${{ matrix.runtime }}/KVMSwitcher.exe
+
+  windows-installer:
+    name: Windows installers (build, install, uninstall)
+    needs: windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          pattern: KVMSwitcher-win-*
+          path: windows/publish
+      - name: Build the unsigned installers
+        shell: pwsh
+        run: windows/packaging/make-installers.ps1
+      - name: Install quietly, then uninstall
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem windows/publish -Filter "KVMSwitcher-*-win-x64-setup.exe").FullName
+          $target = Join-Path $env:RUNNER_TEMP "kvm-switcher-installed"
+          $logPath = Join-Path $env:RUNNER_TEMP "install.log"
+          $install = Start-Process -FilePath $setup -Wait -PassThru -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CURRENTUSER", "/DIR=`"$target`"", "/LOG=`"$logPath`""
+          if ($install.ExitCode -ne 0) { Get-Content $logPath -Tail 40; exit $install.ExitCode }
+          foreach ($installedFile in @("KVMSwitcher.exe", "unins000.exe")) {
+            if (-not (Test-Path "$target\$installedFile")) { throw "$installedFile was not installed" }
+          }
+          Start-Process -FilePath "$target\unins000.exe" -Wait -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART"
+          # The uninstaller hands off to a copy of itself in the temp folder, so wait for the files to go.
+          $deadline = (Get-Date).AddSeconds(60)
+          while ((Test-Path "$target\KVMSwitcher.exe") -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 1 }
+          if (Test-Path "$target\KVMSwitcher.exe") { throw "Uninstall left KVMSwitcher.exe behind" }
+          "Installed and uninstalled $(Split-Path $setup -Leaf)"
+
+  windows-signed:
+    name: Windows signed exes and installers
+    # Signs for releases and by hand, not on every push.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: [windows, windows-installer]
+    runs-on: windows-latest
+    permissions:
+      contents: read
+      id-token: write  # lets azure/login sign in through GitHub's OIDC token: no stored secret
+    environment: release  # holds the AZURE_* variables; allowed for main and v* tags only
+    env:
+      HAS_WIN_SIGN: ${{ vars.AZURE_CLIENT_ID != '' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
+        with:
+          pattern: KVMSwitcher-win-*
+          path: windows/publish
+      - name: Sign in to Azure
+        if: env.HAS_WIN_SIGN == 'true'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906  # v3.1.0
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign the app exes
+        if: env.HAS_WIN_SIGN == 'true'
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82  # v2.0.0
+        with:
+          endpoint: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_CERT_PROFILE }}
+          files-folder: ${{ github.workspace }}\windows\publish
+          files-folder-filter: exe
+          files-folder-recurse: true
+          description: KVM Switcher
+          description-url: https://github.com/mhuot/kvm-switcher-comet-x
+      # The installers and their uninstallers are signed by Inno Setup as it makes them: the uninstaller
+      # (unins000.exe) only exists during that compile, so a later signing step can't reach it.
+      - name: Set up the sign tool for the installers
+        if: env.HAS_WIN_SIGN == 'true'
+        shell: pwsh
+        run: windows/packaging/sign-setup.ps1 -Endpoint "${{ vars.AZURE_SIGNING_ENDPOINT }}" -Account "${{ vars.AZURE_SIGNING_ACCOUNT }}" -CertificateProfile "${{ vars.AZURE_CERT_PROFILE }}"
+      - name: Build the installers
+        shell: pwsh
+        run: windows/packaging/make-installers.ps1 -Sign:($env:HAS_WIN_SIGN -eq "true")
+      - name: Check the signatures (app exes, installers, installed uninstaller)
+        if: env.HAS_WIN_SIGN == 'true'
+        shell: pwsh
+        run: |
+          $setup = (Get-ChildItem windows/publish -Filter "KVMSwitcher-*-win-x64-setup.exe").FullName
+          $target = Join-Path $env:RUNNER_TEMP "kvm-switcher-installed"
+          $logPath = Join-Path $env:RUNNER_TEMP "install.log"
+          $install = Start-Process -FilePath $setup -Wait -PassThru -ArgumentList "/VERYSILENT", "/SUPPRESSMSGBOXES", "/NORESTART", "/CURRENTUSER", "/DIR=`"$target`"", "/LOG=`"$logPath`""
+          if ($install.ExitCode -ne 0) { Get-Content $logPath -Tail 40; exit $install.ExitCode }
+          $signedFiles = @(Get-ChildItem windows/publish -Recurse -Filter KVMSwitcher.exe) +
+            @(Get-ChildItem windows/publish -Filter "KVMSwitcher-*-setup.exe") + @(Get-Item "$target\unins000.exe")
+          foreach ($signedFile in $signedFiles) {
+            $signature = Get-AuthenticodeSignature $signedFile.FullName
+            "{0}: {1} ({2})" -f $signedFile.FullName, $signature.Status, $signature.SignerCertificate.Subject
+            if ($signature.Status -ne "Valid") { exit 1 }
+          }
+      - name: Collect the release files
+        shell: pwsh
+        run: |
+          $appVersion = (Select-Xml -Path windows/KvmSwitcher/KvmSwitcher.csproj -XPath "//Version").Node.InnerText
+          New-Item -ItemType Directory -Force -Path windows/release | Out-Null
+          foreach ($architectureFolder in Get-ChildItem windows/publish -Directory -Filter "KVMSwitcher-win-*") {
+            $architecture = $architectureFolder.Name -replace "KVMSwitcher-", ""
+            Copy-Item "$($architectureFolder.FullName)\KVMSwitcher.exe" "windows/release/KVMSwitcher-$appVersion-$architecture.exe"
+          }
+          Copy-Item windows/publish/KVMSwitcher-*-setup.exe windows/release/
+          Get-ChildItem windows/release
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
+        with:
+          name: KVMSwitcher-windows-release
+          path: windows/release/*
 
   linux-tests:
     name: Linux app tests (Go)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -137,15 +321,17 @@ jobs:
     name: Linux binaries and packages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
           cache-dependency-path: linux/go.sum
       - name: Build static binaries, tarballs, .deb, .rpm and Arch packages
         run: ./linux/build.sh
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: kvm-switcher-linux
           path: linux/dist/*
@@ -174,8 +360,10 @@ jobs:
       # gnome-keyring-daemon needs to lock memory for the keyring self-test.
       options: --cap-add IPC_LOCK
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: kvm-switcher-linux
           path: linux/dist
@@ -185,12 +373,14 @@ jobs:
   release:
     name: GitHub Release
     if: startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.release)
-    needs: [lint, macos, windows-portable-tests, windows, linux-tests, linux-package, linux-distros]
+    needs: [lint, macos, macos-signed, windows-portable-tests, windows, windows-installer, windows-signed, linux-tests, linux-package, linux-distros]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Check every app's version matches the tag
         run: |
           tag="${GITHUB_REF_NAME}"
@@ -211,17 +401,15 @@ jobs:
           for app_version in "$mac_version" "$windows_version" "$linux_version"; do
             [ "$app_version" = "$tag_version" ] || { echo "::error::Version $app_version does not match expected version $tag_version for tag $tag"; exit 1; }
           done
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           path: artifacts
       - name: Collect release files
         run: |
           mkdir release
-          cp artifacts/KVMSwitcher-macos/KVMSwitcher-macos.zip "release/KVMSwitcher-${TAG_VERSION}-macos.zip"
-          cp artifacts/KVMSwitcher-win-x64/KVMSwitcher.exe "release/KVMSwitcher-${TAG_VERSION}-win-x64.exe"
-          if [ -f artifacts/KVMSwitcher-win-arm64/KVMSwitcher.exe ]; then
-            cp artifacts/KVMSwitcher-win-arm64/KVMSwitcher.exe "release/KVMSwitcher-${TAG_VERSION}-win-arm64.exe"
-          fi
+          cp artifacts/KVMSwitcher-macos-dmg/KVMSwitcher-*.dmg "release/KVMSwitcher-${TAG_VERSION}-macos.dmg"
+          # Signed portable exes and installers, already named KVMSwitcher-<version>-win-<arch>[-setup].exe
+          cp artifacts/KVMSwitcher-windows-release/* release/
           cp artifacts/kvm-switcher-linux/* release/
           (cd release && sha256sum -- * > ../SHA256SUMS.txt && mv ../SHA256SUMS.txt .)
           ls -l release
