@@ -24,46 +24,62 @@ Using a Mac or Linux? See the [macOS guide](USER_GUIDE_MACOS.md) or the
 
 ## Install
 
-KVM Switcher is a single file, `KVMSwitcher.exe`. It doesn't need an installer, admin rights,
-or a separate .NET download.
+Download the right file for your PC from
+[Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest). The installer is
+the easy choice; the portable file is the same app without an installer. Both are signed, and
+neither needs admin rights or a separate .NET download.
 
-1. Download the right file for your PC from
-   [Releases](https://github.com/mhuot/kvm-switcher-comet-x/releases/latest):
+| Your PC | Installer | Portable file |
+|---|---|---|
+| Most Windows PCs (Intel or AMD processor) | `KVMSwitcher-<version>-win-x64-setup.exe` | `KVMSwitcher-<version>-win-x64.exe` |
+| Arm PCs, e.g. Surface Pro with Snapdragon / Copilot+ PCs | `KVMSwitcher-<version>-win-arm64-setup.exe` | `KVMSwitcher-<version>-win-arm64.exe` |
 
-   | Your PC | Download |
-   |---|---|
-   | Most Windows PCs (Intel or AMD processor) | `KVMSwitcher-<version>-win-x64.exe` |
-   | Arm PCs, e.g. Surface Pro with Snapdragon / Copilot+ PCs | `KVMSwitcher-<version>-win-arm64.exe` |
+Not sure? Open **Settings → System → About** and look at **System type**. "x64-based
+processor" means x64; "ARM-based processor" means Arm64.
 
-   Not sure? Open **Settings → System → About** and look at **System type**. "x64-based
-   processor" means x64; "ARM-based processor" means Arm64.
-2. Create a folder for it, for example `C:\Users\<you>\AppData\Local\KVMSwitcher`, and copy
+If you see a blue "Windows protected your PC" box when you open either file, read the next
+section.
+
+### With the installer
+
+1. Double-click the setup file. If it asks who to install for, choose **Install for me only**,
+   which doesn't need admin rights.
+2. Click through the setup. On the last page, leave **Start KVM Switcher** ticked and click
+   **Finish**.
+
+KVM Switcher is now in the Start menu. To update it later, run the setup file for the new
+version; it replaces the old one and keeps your settings.
+
+### As a portable file
+
+The portable file is the whole app in one `.exe`.
+
+1. Create a folder for it, for example `C:\Users\<you>\AppData\Local\KVMSwitcher`, and copy
    the downloaded file there. You can rename it to `KVMSwitcher.exe`. Use a permanent
    location: **Launch at login** points at wherever the file is.
-3. Double-click the file. If you see a blue "Windows protected your PC" box, read
-   the next section.
+2. Double-click the file.
 
 ## The "Windows protected your PC" warning
 
-The first time you open the app, Windows may show:
+The first time you open the app or the installer, Windows may show:
 
 > **Windows protected your PC**
 > Microsoft Defender SmartScreen prevented an unrecognized app from starting.
 
 ### Why it appears
 
-SmartScreen warns about any program that isn't signed with a paid code-signing certificate
-and hasn't been downloaded by many people yet. KVM Switcher is a small personal tool, so
-Windows has never seen it before. The warning doesn't mean Windows found anything harmful.
+KVM Switcher is signed, so Windows knows who published it. SmartScreen can still warn about a
+signed program that few people have downloaded yet, especially just after a new version comes
+out. The warning doesn't mean Windows found anything harmful, and it stops appearing once
+enough people have run that version.
 
 ### What to do
 
 1. Click **More info**.
-2. Check that the app name is **KVMSwitcher.exe**.
+2. Check that the publisher is **Mike Huot**.
 3. Click **Run anyway**.
 
-You only need to do this once per copy of the file. If you replace the `.exe` with a newer
-build, Windows may ask once more.
+You only need to do this once per copy of the file. A newer version may ask once more.
 
 If **Run anyway** doesn't appear, your organization may block unrecognized apps. Ask your IT
 team.
@@ -193,9 +209,16 @@ cautious before resetting.
 
 ## Uninstall
 
+If you used the installer, open **Settings → Apps → Installed apps**, find **KVM Switcher**,
+click **…** and choose **Uninstall**. It quits the app and turns off **Launch at login**.
+
+If you used the portable file:
+
 1. Right-click the tray icon → **Quit KVM Switcher**. If you turned on **Launch at login**,
    turn it off in Settings first.
 2. Delete `KVMSwitcher.exe`.
-3. To remove saved settings and the password too:
-   - Delete the folder `%APPDATA%\KVMSwitcher` (paste that into File Explorer's address bar).
-   - In Credential Manager, remove **KVMSwitcher/glkvm-admin**.
+
+Either way, your settings and password are kept in case you reinstall. To remove them too:
+
+- Delete the folder `%APPDATA%\KVMSwitcher` (paste that into File Explorer's address bar).
+- In Credential Manager, remove **KVMSwitcher/glkvm-admin**.
