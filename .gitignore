@@ -12,3 +12,6 @@ windows/publish/
 
 # Linux build output
 linux/dist/
+
+# signtool, the Artifact Signing client and metadata.json, fetched by windows/packaging/sign-setup.ps1
+windows/packaging/signing/
