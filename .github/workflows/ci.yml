@@ -33,12 +33,14 @@ jobs:
     name: Lint (shell, Go, fixtures)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: shellcheck
         run: shellcheck macos/build-app.sh macos/make-dmg.sh windows/build.sh linux/build.sh linux/install.sh linux/ci/*.sh
       - name: Fixtures are valid JSON
         run: for fixture in fixtures/*.json; do jq empty "$fixture" || exit 1; done
-      - uses: actions/setup-go@v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -55,7 +57,9 @@ jobs:
     name: macOS (Swift tests + app bundle)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Swift tests
         working-directory: macos
         run: swift test
@@ -65,7 +69,7 @@ jobs:
         run: ditto -c -k --keepParent "macos/build/KVM Switcher.app" KVMSwitcher-macos.zip
       - name: Make an unsigned .dmg (checks make-dmg.sh)
         run: ./macos/make-dmg.sh
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-macos
           path: KVMSwitcher-macos.zip
@@ -81,10 +85,10 @@ jobs:
       HAS_MAC_CERT: ${{ secrets.MAC_CERT_P12 != '' }}
       HAS_NOTARY: ${{ secrets.APPLE_APP_PASSWORD != '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: KVMSwitcher-macos
       - name: Unpack the app
@@ -123,7 +127,7 @@ jobs:
             spctl -a -vv "$app_bundle"
             spctl -a -t open --context context:primary-signature -vv "$dmg_path"
           fi
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-macos-dmg
           path: macos/build/KVMSwitcher-*.dmg
@@ -136,8 +140,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           dotnet-version: "10.0.x"
       - name: dotnet test
@@ -156,8 +162,10 @@ jobs:
           || '[{"runtime":"win-x64","runner":"windows-latest"},{"runtime":"win-arm64","runner":"windows-11-arm"}]') }}
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-dotnet@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68  # v6.0.0
         with:
           dotnet-version: "10.0.x"
       - name: Publish single-file exe
@@ -175,7 +183,7 @@ jobs:
               -ArgumentList "--self-test", "`"$logPath`"" -Wait -PassThru
           Get-Content $logPath
           if ($process.ExitCode -ne 0) { throw "Self-test failed with exit code $($process.ExitCode)" }
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-${{ matrix.runtime }}
           path: windows/publish/${{ matrix.runtime }}/KVMSwitcher.exe
@@ -185,8 +193,10 @@ jobs:
     needs: windows
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           pattern: KVMSwitcher-win-*
           path: windows/publish
@@ -224,23 +234,23 @@ jobs:
     env:
       HAS_WIN_SIGN: ${{ vars.AZURE_CLIENT_ID != '' }}
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           persist-credentials: false
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           pattern: KVMSwitcher-win-*
           path: windows/publish
       - name: Sign in to Azure
         if: env.HAS_WIN_SIGN == 'true'
-        uses: azure/login@v3
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906  # v3.1.0
         with:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Sign the app exes
         if: env.HAS_WIN_SIGN == 'true'
-        uses: azure/artifact-signing-action@v2
+        uses: azure/artifact-signing-action@c7ab2a863ab5f9a846ddb8265964877ef296ee82  # v2.0.0
         with:
           endpoint: ${{ vars.AZURE_SIGNING_ENDPOINT }}
           signing-account-name: ${{ vars.AZURE_SIGNING_ACCOUNT }}
@@ -286,7 +296,7 @@ jobs:
           }
           Copy-Item windows/publish/KVMSwitcher-*-setup.exe windows/release/
           Get-ChildItem windows/release
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: KVMSwitcher-windows-release
           path: windows/release/*
@@ -295,8 +305,10 @@ jobs:
     name: Linux app tests (Go)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
@@ -309,15 +321,17 @@ jobs:
     name: Linux binaries and packages
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v6
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16  # v6.5.0
         with:
           # The latest 1.26 patch release; nfpm needs a newer patch than go.mod's minimum.
           go-version: "1.26.x"
           cache-dependency-path: linux/go.sum
       - name: Build static binaries, tarballs, .deb, .rpm and Arch packages
         run: ./linux/build.sh
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9  # v7.0.2
         with:
           name: kvm-switcher-linux
           path: linux/dist/*
@@ -346,8 +360,10 @@ jobs:
       # gnome-keyring-daemon needs to lock memory for the keyring self-test.
       options: --cap-add IPC_LOCK
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           name: kvm-switcher-linux
           path: linux/dist
@@ -362,7 +378,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
       - name: Check every app's version matches the tag
         run: |
           tag="${GITHUB_REF_NAME}"
@@ -383,7 +401,7 @@ jobs:
           for app_version in "$mac_version" "$windows_version" "$linux_version"; do
             [ "$app_version" = "$tag_version" ] || { echo "::error::Version $app_version does not match expected version $tag_version for tag $tag"; exit 1; }
           done
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131  # v7.0.0
         with:
           path: artifacts
       - name: Collect release files
