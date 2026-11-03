@@ -3,7 +3,7 @@ module github.com/mhuot/kvm-switcher-comet-x/linux
 go 1.26.0
 
 require (
-	github.com/godbus/dbus/v5 v5.2.2
+	github.com/godbus/dbus/v5 v5.2.4
 	golang.org/x/term v0.46.0
 )
 
